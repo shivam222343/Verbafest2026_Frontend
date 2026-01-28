@@ -1,0 +1,22 @@
+[build]
+  publish = "dist"
+  command = "npm run build"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    # Disable Cross-Origin-Opener-Policy to allow Firebase Auth popups
+    Cross-Origin-Opener-Policy = "unsafe-none"
+    # Allow cross-origin resource sharing
+    Cross-Origin-Resource-Policy = "cross-origin"
+    # Security headers
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    # Content Security Policy - adjust as needed
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com https://www.gstatic.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https: blob:; connect-src 'self' https://verbafest2026.onrender.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firebaseinstallations.googleapis.com https://www.googleapis.com https://*.firebaseio.com https://firestore.googleapis.com; frame-src 'self' https://verbafest2026.firebaseapp.com https://accounts.google.com;"

@@ -1,0 +1,119 @@
+/* Premium Purple Loader Styles */
+:root {
+    --loader-color: #8b5cf6;
+    /* violet-500 */
+    --loader-color-alt: #d8b4fe;
+    /* purple-300 */
+}
+
+.loader-overlay {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5rem;
+    width: 100%;
+}
+
+.premium-loader {
+    position: relative;
+    width: 80px;
+    height: 80px;
+}
+
+.premium-loader .circle {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border: 4px solid transparent;
+    border-top-color: var(--loader-color);
+    border-radius: 50%;
+    animation: loader-rotate 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+}
+
+.premium-loader .circle:nth-child(2) {
+    border-top-color: var(--loader-color-alt);
+    width: 70%;
+    height: 70%;
+    top: 15%;
+    left: 15%;
+    animation-duration: 0.8s;
+    animation-direction: reverse;
+}
+
+.premium-loader .circle:nth-child(3) {
+    border-top-color: #c084fc;
+    width: 40%;
+    height: 40%;
+    top: 30%;
+    left: 30%;
+    animation-duration: 1.5s;
+}
+
+.loader-glow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 60px;
+    height: 60px;
+    background: var(--loader-color);
+    filter: blur(40px);
+    opacity: 0.3;
+    border-radius: 50%;
+    animation: loader-pulse 2s ease-in-out infinite;
+}
+
+.loader-message {
+    color: var(--color-text-primary);
+    font-size: 0.875rem;
+    font-weight: 600;
+    letter-spacing: 0.025em;
+    text-transform: uppercase;
+    opacity: 0.8;
+    animation: loader-fade 2s ease-in-out infinite;
+}
+
+@keyframes loader-rotate {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes loader-pulse {
+
+    0%,
+    100% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 0.3;
+    }
+
+    50% {
+        transform: translate(-50%, -50%) scale(1.5);
+        opacity: 0.1;
+    }
+}
+
+@keyframes loader-fade {
+
+    0%,
+    100% {
+        opacity: 0.5;
+        transform: translateY(0);
+    }
+
+    50% {
+        opacity: 1;
+        transform: translateY(-2px);
+    }
+}
+
+/* Fallback for the old classes if needed, but we will update the component */
+.view {
+    background: transparent !important;
+    border: none !important;
+}
