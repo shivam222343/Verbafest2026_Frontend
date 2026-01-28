@@ -514,7 +514,7 @@ const RegistrationForm = () => {
                                                 {/* Workshop Selection */}
                                                 <div>
                                                     <div className="flex justify-between items-end mb-1">
-                                                        <label className="block text-sm font-medium text-[var(--color-text-secondary)]">Workshop Selection *</label>
+                                                        <label className="block text-sm font-medium text-[var(--color-text-secondary)]">Sub Event Selection *</label>
                                                         <span className="text-[10px] text-mindSaga-400 font-medium">Can participate in one or all events</span>
                                                     </div>
                                                     <div className="flex flex-col gap-2 p-3 bg-[var(--color-bg-tertiary)] rounded-xl border border-[var(--glass-border)]">
@@ -575,7 +575,7 @@ const RegistrationForm = () => {
                                                             >
                                                                 {selectedEvents.length > 0 && selectedEvents.length === subEvents.filter(e => !(e.maxParticipants > 0 && e.approvedParticipants >= e.maxParticipants)).length
                                                                     ? 'Deselect All'
-                                                                    : 'Select Available Workshops'}
+                                                                    : 'Select Available All Events'}
                                                             </button>
                                                             <div className="text-right">
                                                                 {calculation.discount > 0 && (
