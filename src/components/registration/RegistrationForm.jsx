@@ -313,7 +313,7 @@ const RegistrationForm = () => {
     }
 
     return (
-        <div className="w-full max-w-[95%] mx-auto py-12 px-4">
+        <div className="w-full max-w-full mx-auto py-12 px-1">
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
                 {/* Sidebar */}
                 <div className="space-y-6 lg:col-span-1 h-fit static top-8">
