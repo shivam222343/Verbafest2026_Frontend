@@ -518,51 +518,64 @@ const RegistrationForm = () => {
                                                         <span className="text-[10px] text-mindSaga-400 font-medium">Can participate in one or all events</span>
                                                     </div>
                                                     <div className="flex flex-col gap-2 p-3 bg-[var(--color-bg-tertiary)] rounded-xl border border-[var(--glass-border)]">
-                                                        {subEvents.length > 0 ? subEvents.map(event => (
-                                                            <label key={event._id} className="flex items-center gap-3 cursor-pointer p-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
-                                                                <input
-                                                                    type="checkbox"
-                                                                    checked={selectedEvents.includes(event._id)}
-                                                                    onChange={() => {
-                                                                        const isSelected = selectedEvents.includes(event._id);
-                                                                        if (isSelected) {
-                                                                            // Deselecting: If unchecking from All (and total > 2), clear all.
-                                                                            if (selectedEvents.length === subEvents.length && subEvents.length > 2) {
-                                                                                setSelectedEvents([]);
+                                                        {subEvents.length > 0 ? subEvents.map(event => {
+                                                            const isFull = event.maxParticipants > 0 && event.approvedParticipants >= event.maxParticipants;
+                                                            return (
+                                                                <label
+                                                                    key={event._id}
+                                                                    className={`flex items-center gap-3 p-2 rounded-lg transition-colors ${isFull ? 'opacity-50 cursor-not-allowed bg-status-busy/5' : 'cursor-pointer hover:bg-black/5 dark:hover:bg-white/5'}`}
+                                                                >
+                                                                    <input
+                                                                        type="checkbox"
+                                                                        checked={selectedEvents.includes(event._id)}
+                                                                        disabled={isFull}
+                                                                        onChange={() => {
+                                                                            if (isFull) return;
+                                                                            const isSelected = selectedEvents.includes(event._id);
+                                                                            if (isSelected) {
+                                                                                if (selectedEvents.length === subEvents.length && subEvents.length > 2) {
+                                                                                    setSelectedEvents([]);
+                                                                                } else {
+                                                                                    setSelectedEvents(selectedEvents.filter(id => id !== event._id));
+                                                                                }
                                                                             } else {
-                                                                                setSelectedEvents(selectedEvents.filter(id => id !== event._id));
+                                                                                if (selectedEvents.length >= 1) {
+                                                                                    setSelectedEvents(subEvents.map(e => e._id));
+                                                                                } else {
+                                                                                    setSelectedEvents([...selectedEvents, event._id]);
+                                                                                }
                                                                             }
-                                                                        } else {
-                                                                            // Selecting: If one is already selected, select all.
-                                                                            if (selectedEvents.length >= 1) {
-                                                                                setSelectedEvents(subEvents.map(e => e._id));
-                                                                            } else {
-                                                                                setSelectedEvents([...selectedEvents, event._id]);
-                                                                            }
-                                                                        }
-                                                                    }}
-                                                                    className="w-5 h-5 rounded border-gray-300 text-mindSaga-600 focus:ring-mindSaga-500"
-                                                                />
-                                                                <div className="flex-1">
-                                                                    <span className="font-medium text-sm text-[var(--color-text-primary)]">{event.name}</span>
-                                                                    <div className="text-xs text-[var(--color-text-muted)] flex justify-between">
-                                                                        <span>{event.maxParticipants ? `High demand` : 'Open'}</span>
-                                                                        <span className="font-bold text-status-available">₹{event.registrationPrice || 50}</span>
+                                                                        }}
+                                                                        className="w-5 h-5 rounded border-gray-300 text-mindSaga-600 focus:ring-mindSaga-500 disabled:opacity-50"
+                                                                    />
+                                                                    <div className="flex-1">
+                                                                        <div className="flex justify-between items-center">
+                                                                            <span className={`font-medium text-sm ${isFull ? 'text-status-busy' : 'text-[var(--color-text-primary)]'}`}>
+                                                                                {event.name}
+                                                                            </span>
+                                                                            {isFull && <span className="text-[10px] font-bold text-status-busy uppercase tracking-widest">(Registrations Full)</span>}
+                                                                        </div>
+                                                                        <div className="text-xs text-[var(--color-text-muted)] flex justify-end">
+                                                                            <span className={`font-bold ${isFull ? 'text-[var(--color-text-muted)]' : 'text-status-available'}`}>₹{event.registrationPrice || 50}</span>
+                                                                        </div>
                                                                     </div>
-                                                                </div>
-                                                            </label>
-                                                        )) : <span className="text-xs text-center text-muted">Loading events...</span>}
+                                                                </label>
+                                                            );
+                                                        }) : <span className="text-xs text-center text-muted">Loading events...</span>}
 
                                                         <div className="pt-2 mt-2 border-t border-[var(--glass-border)] flex items-center justify-between">
                                                             <button
                                                                 type="button"
                                                                 onClick={() => {
-                                                                    if (selectedEvents.length === subEvents.length) setSelectedEvents([]);
-                                                                    else setSelectedEvents(subEvents.map(e => e._id));
+                                                                    const availableEvents = subEvents.filter(e => !(e.maxParticipants > 0 && e.approvedParticipants >= e.maxParticipants));
+                                                                    if (selectedEvents.length === availableEvents.length) setSelectedEvents([]);
+                                                                    else setSelectedEvents(availableEvents.map(e => e._id));
                                                                 }}
                                                                 className="text-xs font-bold text-mindSaga-500 hover:underline"
                                                             >
-                                                                {selectedEvents.length === subEvents.length ? 'Deselect All' : 'Select All Workshops'}
+                                                                {selectedEvents.length > 0 && selectedEvents.length === subEvents.filter(e => !(e.maxParticipants > 0 && e.approvedParticipants >= e.maxParticipants)).length
+                                                                    ? 'Deselect All'
+                                                                    : 'Select Available Workshops'}
                                                             </button>
                                                             <div className="text-right">
                                                                 {calculation.discount > 0 && (

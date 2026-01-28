@@ -48,8 +48,8 @@ const PublicSubEventsPage = () => {
                     <p className="text-[var(--color-text-secondary)]">
                         The list of sub-events is not currently public. Please check back later or contact the organizers.
                     </p>
-                    <Button variant="primary" onClick={() => navigate('/')} className="w-full">
-                        Back to Home
+                    <Button variant="primary" onClick={() => navigate('/register')} className="w-full">
+                        Go to Registration
                     </Button>
                 </Card>
             </div>
@@ -125,7 +125,13 @@ const PublicSubEventsPage = () => {
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: idx * 0.1 }}
                         >
-                            <Card className="h-full group hover:border-mindSaga-500/50 transition-smooth overflow-hidden flex flex-col">
+                            <Card className={`h-full group hover:border-mindSaga-500/50 transition-smooth overflow-hidden flex flex-col relative ${(event.maxParticipants > 0 && event.approvedParticipants >= event.maxParticipants) ? 'opacity-75 grayscale-[0.5]' : ''
+                                }`}>
+                                {event.maxParticipants > 0 && event.approvedParticipants >= event.maxParticipants && (
+                                    <div className="absolute top-4 right-4 z-10 bg-status-busy text-white text-[10px] font-black px-2 py-1 rounded shadow-lg animate-pulse uppercase tracking-widest">
+                                        Full
+                                    </div>
+                                )}
                                 <div className={`h-2 bg-${event.accentColor || 'mindSaga'}-500`} />
                                 <div className="p-6 flex-1 flex flex-col">
                                     <div className="flex items-start justify-between mb-4">
@@ -137,7 +143,10 @@ const PublicSubEventsPage = () => {
                                         </span>
                                     </div>
 
-                                    <h3 className="text-xl font-bold mb-3 text-[var(--color-text-primary)] group-hover:text-mindSaga-400 transition-colors">
+                                    <h3 className={`text-xl font-bold mb-3 transition-colors ${(event.maxParticipants > 0 && event.approvedParticipants >= event.maxParticipants)
+                                        ? 'text-status-busy'
+                                        : 'text-[var(--color-text-primary)] group-hover:text-mindSaga-400'
+                                        }`}>
                                         {event.name}
                                     </h3>
 
@@ -146,14 +155,6 @@ const PublicSubEventsPage = () => {
                                     </p>
 
                                     <div className="space-y-4 pt-6 border-t border-[var(--glass-border)]">
-                                        <div className="flex items-center justify-between text-sm">
-                                            <span className="flex items-center gap-2 text-[var(--color-text-muted)]">
-                                                <MdPeople /> Capacity
-                                            </span>
-                                            <span className="font-bold text-[var(--color-text-primary)]">
-                                                {event.maxParticipants ? `${event.approvedParticipants}/${event.maxParticipants}` : 'Unlimited'}
-                                            </span>
-                                        </div>
                                         <div className="flex items-center justify-between">
                                             <span className="text-sm text-[var(--color-text-muted)]">Registration Fee</span>
                                             <span className="text-2xl font-black text-mindSaga-400">
@@ -164,10 +165,19 @@ const PublicSubEventsPage = () => {
                                 </div>
                                 {settings.isRegistrationOpen && (
                                     <button
-                                        onClick={() => navigate('/register')}
-                                        className="w-full py-4 bg-[var(--color-bg-tertiary)] hover:bg-mindSaga-600 hover:text-white transition-smooth font-bold text-sm uppercase tracking-widest flex items-center justify-center gap-2 border-t border-[var(--glass-border)]"
+                                        onClick={() => {
+                                            if (event.maxParticipants > 0 && event.approvedParticipants >= event.maxParticipants) return;
+                                            navigate('/register');
+                                        }}
+                                        disabled={event.maxParticipants > 0 && event.approvedParticipants >= event.maxParticipants}
+                                        className={`w-full py-4 transition-smooth font-bold text-sm uppercase tracking-widest flex items-center justify-center gap-2 border-t border-[var(--glass-border)] ${event.maxParticipants > 0 && event.approvedParticipants >= event.maxParticipants
+                                            ? 'bg-status-busy/10 text-status-busy cursor-not-allowed'
+                                            : 'bg-[var(--color-bg-tertiary)] hover:bg-mindSaga-600 hover:text-white'
+                                            }`}
                                     >
-                                        Register for this <MdArrowForward />
+                                        {event.maxParticipants > 0 && event.approvedParticipants >= event.maxParticipants
+                                            ? 'Registrations Full'
+                                            : <>Register for this <MdArrowForward /></>}
                                     </button>
                                 )}
                             </Card>

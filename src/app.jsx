@@ -41,7 +41,7 @@ import { Toaster } from 'react-hot-toast';
 
 const RootRedirect = () => {
     const { isAuthenticated, userRole } = useAuthStore();
-    if (!isAuthenticated) return <Navigate to="/admin/login" replace />;
+    if (!isAuthenticated) return <Navigate to="/register" replace />;
     return userRole === 'admin'
         ? <Navigate to="/admin/dashboard" replace />
         : <Navigate to="/participant/dashboard" replace />;

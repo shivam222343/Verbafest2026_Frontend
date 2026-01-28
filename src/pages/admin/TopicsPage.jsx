@@ -275,7 +275,7 @@ const TopicsPage = () => {
                                                     className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-mindSaga-500 hover:text-mindSaga-600 transition-colors"
                                                     title="Make this topic available again"
                                                 >
-                                                    <MdRefresh className="w-3 h-3" /> Reset
+                                                    <MdRefresh className="w-3 h-3" /> <span className='mr-14'>Reset</span>
                                                 </button>
                                             )}
                                         </div>
