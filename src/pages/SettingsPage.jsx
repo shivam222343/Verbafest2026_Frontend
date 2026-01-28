@@ -22,15 +22,19 @@ const SettingsPage = () => {
         allEventsQrCodeUrl: '',
         comboPrice: 150,
         availableStreams: ['Computer Science and Engineering'],
-        availableColleges: ["Kit's college of enginnering, Kolhapur"]
+        availableColleges: ["Kit's college of enginnering, Kolhapur"],
+        showSubEventsOnPublicPage: false,
+        publicSubEventsBannerUrl: ''
     });
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [qrSingleUploading, setQrSingleUploading] = useState(false);
     const [qrAllUploading, setQrAllUploading] = useState(false);
+    const [bannerUploading, setBannerUploading] = useState(false);
     const [activeSection, setActiveSection] = useState('general');
 
     const registrationUrl = `${window.location.origin}/register`;
+    const publicSubEventsUrl = `${window.location.origin}/sub-events`;
 
     useEffect(() => {
         fetchSettings();
@@ -95,6 +99,29 @@ const SettingsPage = () => {
         } finally {
             if (type === 'single') setQrSingleUploading(false);
             else setQrAllUploading(false);
+        }
+    };
+
+    const handleBannerUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        try {
+            setBannerUploading(true);
+
+            const formData = new FormData();
+            formData.append('banner', file);
+
+            const response = await axios.post('/admin/settings/upload-banner', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+
+            setSettings({ ...settings, publicSubEventsBannerUrl: response.data.url });
+            toast.success('Banner uploaded! Press save to apply.');
+        } catch (error) {
+            toast.error('Failed to upload banner');
+        } finally {
+            setBannerUploading(false);
         }
     };
 
@@ -212,24 +239,110 @@ const SettingsPage = () => {
 
                                     <div className="space-y-6">
                                         {/* URL Card */}
-                                        <div className="p-4 rounded-xl bg-mindSaga-500/10 border border-mindSaga-500/20">
-                                            <p className="text-sm text-mindSaga-300 mb-1">Public Registration Link</p>
-                                            <div className="flex items-center gap-2">
-                                                <code className="flex-1 bg-black/30 p-2 rounded text-sm text-[var(--color-text-primary)] break-all">
-                                                    {registrationUrl}
-                                                </code>
-                                                <Button
-                                                    type="button"
-                                                    variant="secondary"
-                                                    className="py-2"
-                                                    onClick={() => {
-                                                        navigator.clipboard.writeText(registrationUrl);
-                                                        alert('Link copied to clipboard!');
-                                                    }}
-                                                >
-                                                    Copy
-                                                </Button>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div className="p-4 rounded-xl bg-mindSaga-500/10 border border-mindSaga-500/20">
+                                                <p className="text-sm text-mindSaga-300 mb-1">Public Registration Link</p>
+                                                <div className="flex items-center gap-2">
+                                                    <code className="flex-1 bg-black/30 p-2 rounded text-sm text-[var(--color-text-primary)] truncate">
+                                                        {registrationUrl}
+                                                    </code>
+                                                    <Button
+                                                        type="button"
+                                                        variant="secondary"
+                                                        className="py-1 px-3 text-xs"
+                                                        onClick={() => {
+                                                            navigator.clipboard.writeText(registrationUrl);
+                                                            toast.success('Link copied!');
+                                                        }}
+                                                    >
+                                                        Copy
+                                                    </Button>
+                                                </div>
                                             </div>
+                                            <div className="p-4 rounded-xl bg-debate-500/10 border border-debate-500/20">
+                                                <p className="text-sm text-debate-300 mb-1">Public Sub-Events Link</p>
+                                                <div className="flex items-center gap-2">
+                                                    <code className="flex-1 bg-black/30 p-2 rounded text-sm text-[var(--color-text-primary)] truncate">
+                                                        {publicSubEventsUrl}
+                                                    </code>
+                                                    <Button
+                                                        type="button"
+                                                        variant="secondary"
+                                                        className="py-1 px-3 text-xs"
+                                                        onClick={() => {
+                                                            navigator.clipboard.writeText(publicSubEventsUrl);
+                                                            toast.success('Link copied!');
+                                                        }}
+                                                    >
+                                                        Copy
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Public Sub-Events Options */}
+                                        <div className="p-4 rounded-xl bg-[var(--color-bg-tertiary)] space-y-4">
+                                            <div className="flex items-center justify-between">
+                                                <div>
+                                                    <p className="font-semibold text-[var(--color-text-primary)]">Public Sub-Events Page</p>
+                                                    <p className="text-sm text-[var(--color-text-muted)]">Show all sub-events on a dedicated public page</p>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setSettings({ ...settings, showSubEventsOnPublicPage: !settings.showSubEventsOnPublicPage })}
+                                                    className={`w-12 h-6 rounded-full transition-smooth relative ${settings.showSubEventsOnPublicPage ? 'bg-mindSaga-600' : 'bg-[var(--color-text-muted)]'}`}
+                                                >
+                                                    <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-smooth ${settings.showSubEventsOnPublicPage ? 'right-1' : 'left-1'}`} />
+                                                </button>
+                                            </div>
+
+                                            {settings.showSubEventsOnPublicPage && (
+                                                <motion.div
+                                                    initial={{ opacity: 0, height: 0 }}
+                                                    animate={{ opacity: 1, height: 'auto' }}
+                                                    className="pt-4 border-t border-[var(--glass-border)] space-y-4"
+                                                >
+                                                    <div className="flex flex-col md:flex-row gap-4 items-start">
+                                                        <div className="flex-1 w-full">
+                                                            <Input
+                                                                label="Sub-Events Banner URL"
+                                                                value={settings.publicSubEventsBannerUrl}
+                                                                onChange={e => setSettings({ ...settings, publicSubEventsBannerUrl: e.target.value })}
+                                                                placeholder="https://example.com/banner.png"
+                                                            />
+                                                        </div>
+                                                        <div className="w-full md:w-auto pt-7">
+                                                            <input
+                                                                type="file"
+                                                                id="banner-upload"
+                                                                className="hidden"
+                                                                accept="image/*"
+                                                                onChange={handleBannerUpload}
+                                                            />
+                                                            <Button
+                                                                type="button"
+                                                                variant="secondary"
+                                                                className="w-full"
+                                                                loading={bannerUploading}
+                                                                onClick={() => document.getElementById('banner-upload').click()}
+                                                            >
+                                                                <Upload className="w-4 h-4 mr-2" />
+                                                                Upload
+                                                            </Button>
+                                                        </div>
+                                                    </div>
+
+                                                    {settings.publicSubEventsBannerUrl && (
+                                                        <div className="p-4 rounded-xl bg-black/20 flex flex-col items-center">
+                                                            <img
+                                                                src={settings.publicSubEventsBannerUrl}
+                                                                alt="Banner Preview"
+                                                                className="w-full h-auto max-h-[150px] object-cover rounded-lg border border-[var(--glass-border)]"
+                                                            />
+                                                        </div>
+                                                    )}
+                                                </motion.div>
+                                            )}
                                         </div>
 
                                         {/* Dropdown Options Management */}

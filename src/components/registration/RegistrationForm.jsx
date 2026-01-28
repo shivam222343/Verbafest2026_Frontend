@@ -13,7 +13,10 @@ import Input from '../ui/Input';
 import Card from '../ui/Card';
 import toast from 'react-hot-toast';
 
+import { useNavigate } from 'react-router-dom';
+
 const RegistrationForm = () => {
+    const navigate = useNavigate();
     const [currentStep, setCurrentStep] = useState(1);
     const [subEvents, setSubEvents] = useState([]);
     const [settings, setSettings] = useState(null);
@@ -369,7 +372,10 @@ const RegistrationForm = () => {
                             <p className="text-sm text-white/90 mb-6 leading-relaxed">
                                 Explore detailed sub event information, schedules, and benefits before registering!
                             </p>
-                            <button className="w-full py-2.5 rounded-xl bg-white/20 backdrop-blur-md border border-white/30 text-white text-sm font-bold hover:bg-white/30 transition-all flex items-center justify-center gap-2">
+                            <button
+                                onClick={() => navigate('/sub-events')}
+                                className="w-full py-2.5 rounded-xl bg-white/20 backdrop-blur-md border border-white/30 text-white text-sm font-bold hover:bg-white/30 transition-all flex items-center justify-center gap-2"
+                            >
                                 View All Subevents <ChevronRight className="w-4 h-4" />
                             </button>
                         </div>

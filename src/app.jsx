@@ -35,6 +35,7 @@ import JudgeDashboard from "./pages/judge/JudgeDashboard";
 
 // Public Pages
 import RegistrationPage from "./pages/RegistrationPage";
+import PublicSubEventsPage from "./pages/PublicSubEventsPage";
 
 import { Toaster } from 'react-hot-toast';
 
@@ -53,6 +54,7 @@ const App = () => {
             <Routes>
                 {/* Public Routes */}
                 <Route path="/register" element={<RegistrationPage />} />
+                <Route path="/sub-events" element={<PublicSubEventsPage />} />
 
                 {/* Admin Auth Routes */}
                 <Route path="/admin/login" element={<AdminLoginPage />} />
