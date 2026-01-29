@@ -33,7 +33,8 @@ const SubEventsPage = () => {
         registrationDeadline: '',
         startTime: '',
         accentColor: 'mindSaga',
-        registrationPrice: 50
+        registrationPrice: 50,
+        whatsappGroupLink: ''
     });
 
     useEffect(() => {
@@ -134,7 +135,8 @@ const SubEventsPage = () => {
             registrationDeadline: event.registrationDeadline ? new Date(event.registrationDeadline).toISOString().split('T')[0] : '',
             startTime: event.startTime ? new Date(event.startTime).toISOString().slice(0, 16) : '',
             accentColor: event.accentColor,
-            registrationPrice: event.registrationPrice || 50
+            registrationPrice: event.registrationPrice || 50,
+            whatsappGroupLink: event.whatsappGroupLink || ''
         });
         setShowCreateModal(true);
     };
@@ -166,7 +168,8 @@ const SubEventsPage = () => {
                     registrationDeadline: '',
                     startTime: '',
                     accentColor: 'mindSaga',
-                    registrationPrice: 50
+                    registrationPrice: 50,
+                    whatsappGroupLink: ''
                 });
             }
         } catch (error) {
@@ -214,7 +217,8 @@ const SubEventsPage = () => {
                             registrationDeadline: '',
                             startTime: '',
                             accentColor: 'mindSaga',
-                            registrationPrice: 50
+                            registrationPrice: 50,
+                            whatsappGroupLink: ''
                         });
                         setShowCreateModal(true);
                     }}
@@ -507,6 +511,14 @@ const SubEventsPage = () => {
                                                 ))}
                                             </div>
                                         </div>
+
+                                        <Input
+                                            label="WhatsApp Group Link (Optional)"
+                                            placeholder="https://chat.whatsapp.com/..."
+                                            className="!bg-[var(--input-bg)] !border-[var(--input-border)] !text-[var(--color-text-primary)]"
+                                            value={formData.whatsappGroupLink}
+                                            onChange={e => setFormData({ ...formData, whatsappGroupLink: e.target.value })}
+                                        />
                                     </div>
                                 </div>
 

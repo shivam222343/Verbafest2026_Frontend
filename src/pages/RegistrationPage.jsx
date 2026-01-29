@@ -4,6 +4,7 @@ import { Sparkles } from "lucide-react";
 import useThemeStore from "../store/themeStore";
 import ThemeToggle from "../components/ThemeToggle";
 import RegistrationForm from "../components/registration/RegistrationForm";
+import QueryForm from "../components/QueryForm";
 
 const RegistrationPage = () => {
     const { theme } = useThemeStore();
@@ -22,18 +23,30 @@ const RegistrationPage = () => {
                             <div className="w-12 h-12 rounded-xl overflow-hidden shadow-lg border border-[var(--glass-border)] bg-white p-1">
                                 <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" />
                             </div>
-                            <h1 className="text-2xl font-bold text-gradient">
-                                Event Registration
-                            </h1>
                         </div>
-                        <ThemeToggle />
+                        <div className="flex items-center gap-3">
+                            <a
+                                href="/participant/login"
+                                className="px-4 py-2 rounded-lg bg-gd-600 text-white font-medium hover:bg-gd-500 transition-all shadow-lg hover:shadow-xl flex items-center gap-2"
+                            >
+                                <Sparkles className="w-4 h-4" />
+                                <span className="hidden sm:inline">Go to Participant Dashboard</span>
+                                <span className="sm:hidden">Dashboard</span>
+                            </a>
+                            <ThemeToggle />
+                        </div>
                     </div>
                 </div>
             </header>
 
             {/* Main Content */}
-            <main className="container mx-auto px-6 py-12">
+            <main className="container mx-auto px-6 py-12 space-y-16">
                 <RegistrationForm />
+
+                {/* Query Section */}
+                <div className="max-w-4xl mx-auto">
+                    <QueryForm />
+                </div>
             </main>
 
             {/* Footer */}

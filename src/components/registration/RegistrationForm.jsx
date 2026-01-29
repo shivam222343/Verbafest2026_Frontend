@@ -7,6 +7,7 @@ import {
     ChevronLeft, Mail, Phone, School, BookOpen,
     Download
 } from 'lucide-react';
+import { FaWhatsapp } from 'react-icons/fa';
 import axios from '../../lib/axios';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
@@ -204,27 +205,27 @@ const RegistrationForm = () => {
         setLoading(true);
 
         try {
-            const submitData = new FormData();
-            submitData.append('fullName', data.fullName);
-            submitData.append('email', data.email);
-            submitData.append('mobile', data.mobile);
-            submitData.append('prn', data.prn);
-            submitData.append('paidAmount', data.paidAmount);
-
-            // Handle "Other" logic for data submission
-            const finalCollege = data.college === 'Other' ? data.otherCollege : data.college;
+            // Handle "Other" logic for data submission (only for branch and year)
             const finalBranch = data.branch === 'Other' ? data.otherStream : data.branch;
 
             // Map Year string to Number for backend if possible, or just send string
             const yearMap = { 'First Year': 1, 'Second Year': 2, 'Third Year': 3, 'Last Year': 4, 'Other': 5 };
             const finalYear = data.year === 'Other' ? (data.otherYear || 5) : (yearMap[data.year] || 1);
 
-            submitData.append('branch', finalBranch);
-            submitData.append('year', finalYear);
-            submitData.append('college', finalCollege);
-            submitData.append('transactionId', data.transactionId);
-            submitData.append('selectedSubEvents', JSON.stringify(selectedEvents));
-            submitData.append('paymentProofUrl', uploadedUrl);
+            // Use JSON instead of FormData since image is already uploaded
+            const submitData = {
+                fullName: data.fullName,
+                email: data.email,
+                mobile: data.mobile,
+                prn: data.prn,
+                paidAmount: data.paidAmount,
+                branch: finalBranch,
+                year: finalYear,
+                college: data.college,
+                transactionId: data.transactionId,
+                selectedSubEvents: selectedEvents,
+                paymentProofUrl: uploadedUrl
+            };
 
             const response = await axios.post('/registration/submit', submitData);
 
@@ -235,6 +236,7 @@ const RegistrationForm = () => {
             reset();
             setSelectedEvents([]);
             setPaymentProof(null);
+            setUploadedUrl('');
         } catch (err) {
             toast.error(err.response?.data?.message || 'Registration failed. Please try again.');
         } finally {
@@ -283,12 +285,43 @@ const RegistrationForm = () => {
                                     <span className="text-[var(--color-text-primary)] font-medium">{registrationData?.email}</span>
                                 </div>
                                 <div className="flex flex-col">
-                                    <span className="text-[10px] text-[var(--color-text-muted)] uppercase font-bold">Password</span>
+                                    <span className="text-[10px] text-[var(--color-text-muted)] uppercase font-bold">Password (Your Mobile Number)</span>
                                     <span className="text-lg font-mono text-gd-500 font-bold">{registrationData?.password}</span>
                                 </div>
                                 <p className="text-[10px] text-status-busy mt-2 font-medium">⚠️ Please save these credentials. You will need them to login to your dashboard.</p>
                             </div>
                         </div>
+
+                        {/* WhatsApp Group Links */}
+                        {registrationData?.registeredSubEvents && registrationData.registeredSubEvents.length > 0 && (
+                            <div className="glass-card p-6 bg-status-available/5 rounded-3xl border border-status-available/20 text-left">
+                                <h3 className="text-lg font-bold text-[var(--color-text-primary)] mb-4 flex items-center gap-2">
+                                    <Phone className="w-5 h-5 text-status-available" />
+                                    Join WhatsApp Groups
+                                </h3>
+                                <div className="space-y-3">
+                                    {registrationData.registeredSubEvents.map((event, idx) => (
+                                        event.whatsappGroupLink ? (
+                                            <div key={idx} className="flex items-center justify-between p-3 rounded-xl bg-[var(--color-bg-tertiary)] border border-[var(--glass-border)]">
+                                                <div className="flex-1">
+                                                    <p className="text-sm font-bold text-[var(--color-text-primary)]">{event.name}</p>
+                                                    <p className="text-[10px] text-[var(--color-text-muted)] mt-1">Join the group to stay updated</p>
+                                                </div>
+                                                <a
+                                                    href={event.whatsappGroupLink}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="px-4 py-2 rounded-lg bg-[#25D366] text-white text-sm font-bold hover:bg-[#128C7E] transition-all flex items-center gap-2 shadow-lg"
+                                                >
+                                                    <FaWhatsapp className="w-5 h-5" />
+                                                    Join
+                                                </a>
+                                            </div>
+                                        ) : null
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     <div className="flex flex-col gap-3">
@@ -297,14 +330,14 @@ const RegistrationForm = () => {
                             className="w-full h-12"
                             onClick={() => window.location.href = '/participant/login'}
                         >
-                            Open Participant Dashboard
+                            Go to Participant Dashboard
                         </Button>
                         <Button
                             variant="outline"
                             className="w-full h-12"
                             onClick={() => { setSuccess(false); setCurrentStep(1); }}
                         >
-                            Submit Another Registration
+                            Register Another
                         </Button>
                     </div>
                 </Card>
@@ -356,7 +389,7 @@ const RegistrationForm = () => {
                             <li>Placement Oriented Rounds</li>
                             <li>Domain experts judges</li>
                             <li>Networking opportunities</li>
-                            <li>Certificates & prizes</li>
+                            <li>Trophies & E-Certificates</li>
                         </ul>
                     </Card>
 
@@ -415,31 +448,64 @@ const RegistrationForm = () => {
                                                 <Input
                                                     label="Full Name *"
                                                     placeholder="Enter your full name"
-                                                    {...register('fullName', { required: 'Name is required' })}
+                                                    {...register('fullName', {
+                                                        required: 'Name is required',
+                                                        minLength: { value: 3, message: 'Name must be at least 3 characters' },
+                                                        pattern: {
+                                                            value: /^[A-Za-z\s.]+$/,
+                                                            message: 'Name should only contain letters and spaces'
+                                                        }
+                                                    })}
                                                     error={errors.fullName?.message}
                                                 />
                                                 <Input
                                                     label="Email Address *"
                                                     placeholder="example@email.com"
+                                                    type="email"
                                                     {...register('email', {
                                                         required: 'Email is required',
-                                                        pattern: { value: /^\S+@\S+$/i, message: 'Invalid email' }
+                                                        pattern: {
+                                                            value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/i,
+                                                            message: 'Please enter a valid email address'
+                                                        }
                                                     })}
                                                     error={errors.email?.message}
                                                 />
                                                 <Input
                                                     label="Mobile Number *"
-                                                    placeholder="10 digit number"
+                                                    placeholder="10 digit number (e.g., 9876543210)"
+                                                    type="tel"
+                                                    maxLength={10}
+                                                    onInput={(e) => {
+                                                        // Remove any non-numeric characters
+                                                        e.target.value = e.target.value.replace(/[^0-9]/g, '');
+                                                    }}
                                                     {...register('mobile', {
-                                                        required: 'Mobile is required',
-                                                        pattern: { value: /^[0-9]{10}$/, message: 'Invalid 10-digit number' }
+                                                        required: 'Mobile number is required',
+                                                        pattern: {
+                                                            value: /^[6-9][0-9]{9}$/,
+                                                            message: 'Please enter a valid 10-digit Indian mobile number'
+                                                        },
+                                                        minLength: { value: 10, message: 'Mobile number must be 10 digits' },
+                                                        maxLength: { value: 10, message: 'Mobile number must be 10 digits' }
                                                     })}
                                                     error={errors.mobile?.message}
                                                 />
                                                 <Input
                                                     label="PRN Number *"
                                                     placeholder="Enter your PRN"
-                                                    {...register('prn', { required: 'PRN is required' })}
+                                                    onInput={(e) => {
+                                                        // Remove any non-alphanumeric characters
+                                                        e.target.value = e.target.value.replace(/[^A-Za-z0-9]/g, '');
+                                                    }}
+                                                    {...register('prn', {
+                                                        required: 'PRN is required',
+                                                        minLength: { value: 3, message: 'PRN must be at least 3 characters' },
+                                                        pattern: {
+                                                            value: /^[A-Za-z0-9]+$/,
+                                                            message: 'PRN should only contain letters and numbers'
+                                                        }
+                                                    })}
                                                     error={errors.prn?.message}
                                                 />
                                             </div>
@@ -461,17 +527,7 @@ const RegistrationForm = () => {
                                                         className="w-full h-11 px-4 rounded-xl bg-[var(--input-bg)] border border-[var(--input-border)] text-[var(--input-text)] focus:border-mindSaga-500 focus:ring-1 focus:ring-mindSaga-500 transition-smooth"
                                                     >
                                                         {settings?.availableColleges?.map(c => <option key={c} value={c}>{c}</option>)}
-                                                        <option value="Other">Other</option>
                                                     </select>
-                                                    {showOtherCollege && (
-                                                        <div className="mt-2">
-                                                            <Input
-                                                                placeholder="Enter college name"
-                                                                {...register('otherCollege', { required: showOtherCollege ? 'College name is required' : false })}
-                                                                error={errors.otherCollege?.message}
-                                                            />
-                                                        </div>
-                                                    )}
                                                 </div>
 
                                                 {/* Year */}
@@ -489,7 +545,16 @@ const RegistrationForm = () => {
                                                     </select>
                                                     {showOtherYear && (
                                                         <div className="mt-2">
-                                                            <Input type="number" placeholder="Enter Year" {...register('otherYear')} />
+                                                            <Input
+                                                                type="number"
+                                                                placeholder="Enter Year (e.g., 1, 2, 3, 4)"
+                                                                {...register('otherYear', {
+                                                                    required: showOtherYear ? 'Year is required' : false,
+                                                                    min: { value: 1, message: 'Year must be at least 1' },
+                                                                    max: { value: 10, message: 'Year cannot exceed 10' }
+                                                                })}
+                                                                error={errors.otherYear?.message}
+                                                            />
                                                         </div>
                                                     )}
                                                 </div>
@@ -506,7 +571,14 @@ const RegistrationForm = () => {
                                                     </select>
                                                     {showOtherStream && (
                                                         <div className="mt-2">
-                                                            <Input placeholder="Enter Stream" {...register('otherStream', { required: showOtherStream })} />
+                                                            <Input
+                                                                placeholder="Enter Stream"
+                                                                {...register('otherStream', {
+                                                                    required: showOtherStream ? 'Stream name is required' : false,
+                                                                    minLength: { value: 2, message: 'Stream name must be at least 2 characters' }
+                                                                })}
+                                                                error={errors.otherStream?.message}
+                                                            />
                                                         </div>
                                                     )}
                                                 </div>
@@ -765,16 +837,6 @@ const RegistrationForm = () => {
 
                                         {/* Final Inputs */}
                                         <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-                                            <Input
-                                                label="Payment Transaction ID *"
-                                                placeholder="Enter 12-digit UPI Transaction ID / Ref No."
-                                                {...register('transactionId', {
-                                                    required: 'Transaction ID is required',
-                                                    minLength: { value: 6, message: 'Too short to be a valid ID' }
-                                                })}
-                                                error={errors.transactionId?.message}
-                                            />
-
                                             <div className="space-y-3">
                                                 <label className="block text-sm font-bold text-[var(--color-text-primary)]">
                                                     Payment Proof Screenshot *
@@ -795,10 +857,10 @@ const RegistrationForm = () => {
                                                     </div>
                                                     <div className="text-center space-y-1">
                                                         <p className="text-lg font-black text-[var(--color-text-primary)]">
-                                                            {isUploading ? 'Uploading proof...' : (paymentProof ? 'Proof Selected!' : 'Drop screenshot or click to upload')}
+                                                            {isUploading ? 'Uploading to cloud...' : (paymentProof && uploadedUrl ? 'Uploaded Successfully!' : 'Drop screenshot or click to upload')}
                                                         </p>
-                                                        {paymentProof && (
-                                                            <p className="text-sm font-medium text-status-available animate-pulse">
+                                                        {paymentProof && uploadedUrl && (
+                                                            <p className="text-sm font-medium text-status-available">
                                                                 {paymentProof.name}
                                                             </p>
                                                         )}
@@ -810,6 +872,25 @@ const RegistrationForm = () => {
                                                     </div>
                                                 </div>
                                             </div>
+
+                                            <Input
+                                                label="Payment Transaction ID *"
+                                                placeholder="Enter 12-digit UPI Transaction ID / Ref No."
+                                                onInput={(e) => {
+                                                    // Remove any non-alphanumeric characters
+                                                    e.target.value = e.target.value.replace(/[^A-Za-z0-9]/g, '');
+                                                }}
+                                                {...register('transactionId', {
+                                                    required: 'Transaction ID is required',
+                                                    minLength: { value: 6, message: 'Transaction ID must be at least 6 characters' },
+                                                    maxLength: { value: 30, message: 'Transaction ID is too long' },
+                                                    pattern: {
+                                                        value: /^[A-Za-z0-9]+$/,
+                                                        message: 'Transaction ID should only contain letters and numbers'
+                                                    }
+                                                })}
+                                                error={errors.transactionId?.message}
+                                            />
 
                                             <div className="pt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
                                                 <Button
@@ -825,7 +906,7 @@ const RegistrationForm = () => {
                                                     variant="primary"
                                                     className="h-14 text-lg font-bold"
                                                     loading={loading}
-                                                    disabled={loading}
+                                                    disabled={loading || !paymentProof || !uploadedUrl || !watch('transactionId')}
                                                 >
                                                     Complete Registration
                                                 </Button>

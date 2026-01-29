@@ -112,27 +112,6 @@ const ParticipantLoginPage = () => {
                 </div>
 
                 <Card className="p-8">
-                    <Button
-                        variant="outline"
-                        onClick={handleGoogleSignIn}
-                        disabled={loading}
-                        className="w-full mb-6 border-2"
-                    >
-                        <FcGoogle className="w-5 h-5" />
-                        Continue with Google
-                    </Button>
-
-                    <div className="relative mb-6">
-                        <div className="absolute inset-0 flex items-center">
-                            <div className="w-full border-t border-[var(--glass-border)]"></div>
-                        </div>
-                        <div className="relative flex justify-center text-sm">
-                            <span className="px-4 bg-[var(--color-bg-primary)] text-[var(--color-text-muted)]">
-                                Or continue with email
-                            </span>
-                        </div>
-                    </div>
-
                     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                         <Input
                             label="Email Address"
@@ -150,9 +129,9 @@ const ParticipantLoginPage = () => {
                         />
 
                         <Input
-                            label="Password"
+                            label="Password (Your Mobile Number)"
                             type={showPassword ? 'text' : 'password'}
-                            placeholder="••••••••"
+                            placeholder="Enter your mobile number"
                             icon={MdLock}
                             rightElement={
                                 <button
@@ -184,9 +163,12 @@ const ParticipantLoginPage = () => {
                         </Button>
                     </form>
 
-                    <div className="mt-6 text-center">
+                    <div className="mt-6 text-center space-y-2">
                         <p className="text-sm text-[var(--color-text-muted)]">
-                            Enter the credentials received during event registration.
+                            Use your registered email and mobile number to login.
+                        </p>
+                        <p className="text-xs text-[var(--color-text-muted)]">
+                            Your password is your mobile number that you used during registration.
                         </p>
                     </div>
                 </Card>

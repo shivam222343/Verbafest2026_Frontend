@@ -17,6 +17,7 @@ import ParticipantProfile from "./pages/admin/ParticipantProfile";
 import PaymentSettingsPage from "./pages/PaymentSettingsPage";
 import AttendancePage from "./pages/admin/AttendancePage";
 import TopicsPage from "./pages/admin/TopicsPage";
+import QueriesPage from "./pages/QueriesPage";
 
 // Auth Pages
 import AdminLoginPage from "./pages/auth/AdminLoginPage";
@@ -87,6 +88,7 @@ const App = () => {
                     <Route path="analytics" element={<AnalyticsPage />} />
                     <Route path="attendance" element={<AttendancePage />} />
                     <Route path="topics" element={<TopicsPage />} />
+                    <Route path="queries" element={<QueriesPage />} />
                     <Route path="payment-settings" element={<PaymentSettingsPage />} />
                     <Route path="settings" element={<SettingsPage />} />
                 </Route>

@@ -12,7 +12,7 @@ import {
     MdCheckCircle,
     MdTopic
 } from 'react-icons/md';
-import { FiUsers, FiCheckCircle } from 'react-icons/fi';
+import { FiUsers, FiCheckCircle, FiMessageSquare } from 'react-icons/fi';
 import { HiOutlineClipboardList } from 'react-icons/hi';
 import useUIStore from '../../store/uiStore';
 
@@ -47,6 +47,7 @@ const Sidebar = () => {
         { name: 'Analytics', icon: MdAssessment, path: '/admin/analytics' },
         { name: 'Topics', icon: MdTopic, path: '/admin/topics' },
         { name: 'Attendance', icon: MdCheckCircle, path: '/admin/attendance' },
+        { name: 'Queries', icon: FiMessageSquare, path: '/admin/queries' },
         { name: 'Payment Settings', icon: MdPayment, path: '/admin/payment-settings' },
         { name: 'Settings', icon: MdSettings, path: '/admin/settings' },
     ];
