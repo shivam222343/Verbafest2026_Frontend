@@ -5,6 +5,7 @@ import {
     MdLogout, MdEvent, MdCheckCircle, MdPerson, MdLightMode, MdDarkMode,
     MdInfo, MdTimer, MdLocationOn, MdRefresh, MdAnnouncement, MdNotifications
 } from 'react-icons/md';
+import { AlertCircle } from 'lucide-react';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import useAuthStore from '../store/authStore';
@@ -15,6 +16,7 @@ import { useParticipantSocket } from '../hooks/useSocket';
 import Loader from '../components/ui/Loader';
 import BottomSheet from '../components/ui/BottomSheet';
 import useNotificationStore from '../store/notificationStore';
+import ReRegistrationForm from '../components/ReRegistrationForm';
 
 const ParticipantDashboard = () => {
     const navigate = useNavigate();
@@ -191,7 +193,43 @@ const ParticipantDashboard = () => {
                 </div>
 
                 {/* Conditional Rendering Based on Status */}
-                {profile?.registrationStatus === 'pending' || profile?.registrationStatus === 'incomplete' ? (
+                {profile?.registrationStatus === 'rejected' ? (
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="space-y-6"
+                    >
+                        <Card className="p-8 text-center border-l-8 border-l-red-500 bg-red-500/5 relative overflow-hidden">
+                            <div className="relative z-10">
+                                <div className="w-20 h-20 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                                    <AlertCircle className="w-10 h-10 text-red-500" />
+                                </div>
+                                <h3 className="text-2xl font-black text-[var(--color-text-primary)] mb-4">Registration Rejected</h3>
+                                <p className="text-[var(--color-text-secondary)] max-w-lg mx-auto leading-relaxed mb-6">
+                                    Unfortunately, your registration was not approved. Please review the reason below and resubmit your payment details.
+                                </p>
+
+                                {profile?.rejectionReason && (
+                                    <div className="mt-6 p-6 bg-red-500/10 rounded-2xl border border-red-500/20 inline-block text-left max-w-2xl">
+                                        <h4 className="text-sm font-bold text-red-600 uppercase tracking-widest mb-3 flex items-center gap-2">
+                                            <AlertCircle className="w-4 h-4" />
+                                            Rejection Reason
+                                        </h4>
+                                        <p className="text-[var(--color-text-primary)] font-medium whitespace-pre-wrap">
+                                            {profile.rejectionReason}
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                        </Card>
+
+                        {/* Re-Registration Form */}
+                        <ReRegistrationForm
+                            participant={profile}
+                            onSuccess={fetchDashboardData}
+                        />
+                    </motion.div>
+                ) : profile?.registrationStatus === 'pending' || profile?.registrationStatus === 'incomplete' ? (
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
