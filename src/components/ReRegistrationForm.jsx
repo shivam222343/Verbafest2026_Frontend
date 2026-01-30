@@ -144,9 +144,13 @@ const ReRegistrationForm = ({ participant, onSuccess }) => {
                             <h4 className="text-sm font-bold text-[var(--color-text-muted)] uppercase mb-2">UPI Payment</h4>
                             {(() => {
                                 // Show appropriate QR code based on number of events
-                                const qrCodeUrl = selectedEvents.length === 1
-                                    ? (paymentSettings.singleEventQrCodeUrl || paymentSettings.allEventsQrCodeUrl)
-                                    : (paymentSettings.allEventsQrCodeUrl || paymentSettings.singleEventQrCodeUrl);
+                                let qrCodeUrl = paymentSettings.singleEventQrCodeUrl || paymentSettings.allEventsQrCodeUrl;
+
+                                if (selectedEvents.length === 2) {
+                                    qrCodeUrl = paymentSettings.twoEventsQrCodeUrl || paymentSettings.allEventsQrCodeUrl || paymentSettings.singleEventQrCodeUrl;
+                                } else if (selectedEvents.length >= 3) {
+                                    qrCodeUrl = paymentSettings.allEventsQrCodeUrl || paymentSettings.singleEventQrCodeUrl;
+                                }
 
                                 return qrCodeUrl ? (
                                     <div className="bg-white p-4 rounded-xl inline-block mb-3">
@@ -216,6 +220,33 @@ const ReRegistrationForm = ({ participant, onSuccess }) => {
                         Total Events: {selectedEvents.length} | Amount to Pay: ₹{total}
                     </p>
                 </div>
+
+                {selectedEvents.length === 2 && (
+                    <div className="mt-6 p-5 rounded-2xl bg-status-available/5 border border-status-available/20 space-y-3">
+                        <div className="flex items-center gap-2 mb-1">
+                            <CheckCircle className="w-5 h-5 text-status-available" />
+                            <h4 className="text-sm font-bold text-[var(--color-text-primary)]">WhatsApp Group Links</h4>
+                        </div>
+                        <p className="text-xs text-[var(--color-text-secondary)] mb-3 italic">Join these groups for your selected events:</p>
+                        <div className="space-y-2">
+                            {allSubEvents
+                                .filter(event => selectedEvents.includes(event._id))
+                                .map(event => event.whatsappGroupLink ? (
+                                    <div key={event._id} className="flex items-center justify-between p-2 rounded-xl bg-white/5 border border-[var(--glass-border)]">
+                                        <span className="text-xs font-medium text-[var(--color-text-primary)]">{event.name}</span>
+                                        <a
+                                            href={event.whatsappGroupLink}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="px-3 py-1 rounded-lg bg-[#25D366] text-white text-[10px] font-bold hover:bg-[#128C7E] transition-all"
+                                        >
+                                            Join Group
+                                        </a>
+                                    </div>
+                                ) : null)}
+                        </div>
+                    </div>
+                )}
             </Card>
 
             {/* Payment Form */}

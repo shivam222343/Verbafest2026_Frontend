@@ -54,9 +54,10 @@ const RegistrationForm = () => {
         if (!subEvents.length || !paymentSettings) return;
 
         let subtotal = 0;
+        const isCombo = selectedEvents.length >= 3;
         const isAllSelected = selectedEvents.length === subEvents.length && subEvents.length > 0;
 
-        if (isAllSelected && settings?.comboPrice) {
+        if (isCombo && settings?.comboPrice) {
             subtotal = settings.comboPrice;
         } else {
             subtotal = selectedEvents.reduce((total, eventId) => {
@@ -70,7 +71,8 @@ const RegistrationForm = () => {
 
         // Apply bulk discount only if NOT using comboPrice (or if intentional)
         // Usually comboPrice is already discounted, so we only apply bulk discount on individual selections
-        if (!isAllSelected && discountSettings?.enabled && selectedEvents.length >= discountSettings.minEvents) {
+        // Participant will get discount ONLY if participating in 3 or more events
+        if (!isCombo && discountSettings?.enabled && selectedEvents.length >= 3) {
             if (discountSettings.discountType === 'percentage') {
                 discount = (subtotal * discountSettings.discountValue) / 100;
             } else {
@@ -152,8 +154,12 @@ const RegistrationForm = () => {
     const handleDownloadQR = async () => {
         if (!paymentSettings?.upiId) return;
 
-        const isCombo = selectedEvents.length > 1;
-        const uploadedQr = isCombo ? settings?.allEventsQrCodeUrl : settings?.singleEventQrCodeUrl;
+        const isCombo = selectedEvents.length >= 3;
+        const isTwo = selectedEvents.length === 2;
+
+        let uploadedQr = settings?.singleEventQrCodeUrl;
+        if (isTwo) uploadedQr = settings?.twoEventsQrCodeUrl || settings?.allEventsQrCodeUrl;
+        else if (isCombo) uploadedQr = settings?.allEventsQrCodeUrl;
 
         const dynamicQr = `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(
             `upi://pay?pa=${paymentSettings.upiId}&pn=${paymentSettings.accountName}&am=${calculation.total}&cu=INR`
@@ -511,7 +517,7 @@ const RegistrationForm = () => {
                                             </div>
                                         </div>
 
-                                        {/* Right Column: Academic & Workshop Details */}
+                                        {/* Right Column: Academic & Event Details */}
                                         <div className="space-y-6">
                                             <div className="flex items-center gap-3 mb-4 border-b border-[var(--glass-border)] pb-2">
                                                 <School className="w-5 h-5 text-gd-500" />
@@ -605,17 +611,12 @@ const RegistrationForm = () => {
                                                                             if (isFull) return;
                                                                             const isSelected = selectedEvents.includes(event._id);
                                                                             if (isSelected) {
-                                                                                if (selectedEvents.length === subEvents.length && subEvents.length > 2) {
-                                                                                    setSelectedEvents([]);
-                                                                                } else {
-                                                                                    setSelectedEvents(selectedEvents.filter(id => id !== event._id));
-                                                                                }
+                                                                                setSelectedEvents(selectedEvents.filter(id => id !== event._id));
                                                                             } else {
-                                                                                if (selectedEvents.length >= 1) {
-                                                                                    setSelectedEvents(subEvents.map(e => e._id));
-                                                                                } else {
-                                                                                    setSelectedEvents([...selectedEvents, event._id]);
-                                                                                }
+                                                                                // Allow selecting individually up to the total number of events
+                                                                                // If selecting the 3rd event, we could automatically select all if desired, 
+                                                                                // but let's allow manual selection of specifically 3 for the discount.
+                                                                                setSelectedEvents([...selectedEvents, event._id]);
                                                                             }
                                                                         }}
                                                                         className="w-5 h-5 rounded border-gray-300 text-mindSaga-600 focus:ring-mindSaga-500 disabled:opacity-50"
@@ -740,10 +741,38 @@ const RegistrationForm = () => {
                                                                 </p>
                                                             ) : (
                                                                 <p className="text-sm text-[var(--color-text-muted)] italic">
-                                                                    Register for {paymentSettings.bulkDiscount.minEvents} or more events to get a {paymentSettings.bulkDiscount.discountType === 'percentage' ? `${paymentSettings.bulkDiscount.discountValue}% ` : `₹${paymentSettings.bulkDiscount.discountValue} `} discount!
+                                                                    Register for 3 or more events to get a {paymentSettings.bulkDiscount.discountType === 'percentage' ? `${paymentSettings.bulkDiscount.discountValue}% ` : `₹${paymentSettings.bulkDiscount.discountValue} `} discount!
                                                                     (Current: {selectedEvents.length})
                                                                 </p>
                                                             )}
+                                                        </div>
+                                                    )}
+
+                                                    {selectedEvents.length === 2 && (
+                                                        <div className="p-5 rounded-2xl bg-status-available/5 border border-status-available/20 space-y-3">
+                                                            <div className="flex items-center gap-2 mb-1">
+                                                                <FaWhatsapp className="w-5 h-5 text-status-available" />
+                                                                <h4 className="text-sm font-bold text-[var(--color-text-primary)]">WhatsApp Group Links</h4>
+                                                            </div>
+                                                            <p className="text-xs text-[var(--color-text-secondary)] mb-3 italic">Join these groups to stay updated for your selected events:</p>
+                                                            <div className="space-y-2">
+                                                                {selectedEvents.map(eventId => {
+                                                                    const event = subEvents.find(e => e._id === eventId);
+                                                                    return event?.whatsappGroupLink ? (
+                                                                        <div key={eventId} className="flex items-center justify-between p-2 rounded-xl bg-white/5 border border-[var(--glass-border)]">
+                                                                            <span className="text-xs font-medium text-[var(--color-text-primary)]">{event.name}</span>
+                                                                            <a
+                                                                                href={event.whatsappGroupLink}
+                                                                                target="_blank"
+                                                                                rel="noopener noreferrer"
+                                                                                className="px-3 py-1 rounded-lg bg-[#25D366] text-white text-[10px] font-bold hover:bg-[#128C7E] transition-all"
+                                                                            >
+                                                                                Join Group
+                                                                            </a>
+                                                                        </div>
+                                                                    ) : null;
+                                                                })}
+                                                            </div>
                                                         </div>
                                                     )}
                                                 </div>
@@ -754,8 +783,13 @@ const RegistrationForm = () => {
                                                                 {(() => {
                                                                     // A combo is when all available events are selected OR more than 1 if defined that way
                                                                     // Let's stick with > 1 for broad coverage, but prioritize 'all' if that's the intention
-                                                                    const isCombo = selectedEvents.length > 1;
-                                                                    const uploadedQr = isCombo ? settings?.allEventsQrCodeUrl : settings?.singleEventQrCodeUrl;
+                                                                    const isCombo = selectedEvents.length >= 3;
+                                                                    const isTwo = selectedEvents.length === 2;
+
+                                                                    let uploadedQr = settings?.singleEventQrCodeUrl;
+                                                                    if (isTwo) uploadedQr = settings?.twoEventsQrCodeUrl || settings?.allEventsQrCodeUrl;
+                                                                    else if (isCombo) uploadedQr = settings?.allEventsQrCodeUrl;
+
                                                                     const dynamicQr = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(
                                                                         `upi://pay?pa=${paymentSettings.upiId}&pn=${paymentSettings.accountName}&am=${calculation.total}&cu=INR`
                                                                     )}`;
@@ -763,7 +797,7 @@ const RegistrationForm = () => {
                                                                     // Use key to force re-render when image changes
                                                                     return (
                                                                         <img
-                                                                            key={uploadedQr || calculation.total}
+                                                                            key={(uploadedQr || 'dynamic') + calculation.total}
                                                                             src={uploadedQr || dynamicQr}
                                                                             alt="Payment QR"
                                                                             className="w-full h-auto rounded-lg transition-opacity duration-300"

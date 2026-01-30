@@ -19,6 +19,7 @@ const SettingsPage = () => {
         contactEmail: '',
         maxGlobalParticipants: 0,
         singleEventQrCodeUrl: '',
+        twoEventsQrCodeUrl: '',
         allEventsQrCodeUrl: '',
         comboPrice: 150,
         availableStreams: ['Computer Science and Engineering'],
@@ -29,6 +30,7 @@ const SettingsPage = () => {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [qrSingleUploading, setQrSingleUploading] = useState(false);
+    const [qrTwoUploading, setQrTwoUploading] = useState(false);
     const [qrAllUploading, setQrAllUploading] = useState(false);
     const [bannerUploading, setBannerUploading] = useState(false);
     const [activeSection, setActiveSection] = useState('general');
@@ -79,6 +81,7 @@ const SettingsPage = () => {
 
         try {
             if (type === 'single') setQrSingleUploading(true);
+            else if (type === 'two') setQrTwoUploading(true);
             else setQrAllUploading(true);
 
             const formData = new FormData();
@@ -90,6 +93,8 @@ const SettingsPage = () => {
 
             if (type === 'single') {
                 setSettings({ ...settings, singleEventQrCodeUrl: response.data.url });
+            } else if (type === 'two') {
+                setSettings({ ...settings, twoEventsQrCodeUrl: response.data.url });
             } else {
                 setSettings({ ...settings, allEventsQrCodeUrl: response.data.url });
             }
@@ -98,6 +103,7 @@ const SettingsPage = () => {
             toast.error('Failed to upload QR Code');
         } finally {
             if (type === 'single') setQrSingleUploading(false);
+            else if (type === 'two') setQrTwoUploading(false);
             else setQrAllUploading(false);
         }
     };
@@ -511,8 +517,53 @@ const SettingsPage = () => {
                                             </div>
 
                                             <div className="space-y-4">
+                                                <h3 className="font-semibold text-[var(--color-text-primary)]">Two Events Payment QR</h3>
+                                                <p className="text-sm text-[var(--color-text-muted)]">Shown when a participant selects exactly two events.</p>
+
+                                                <div className="flex flex-col md:flex-row gap-4 items-start">
+                                                    <div className="flex-1 w-full">
+                                                        <Input
+                                                            label="Two Events QR URL"
+                                                            value={settings.twoEventsQrCodeUrl}
+                                                            onChange={e => setSettings({ ...settings, twoEventsQrCodeUrl: e.target.value })}
+                                                            placeholder="https://example.com/two-events-qr.png"
+                                                        />
+                                                    </div>
+                                                    <div className="w-full md:w-auto pt-7">
+                                                        <input
+                                                            type="file"
+                                                            id="qr-two-upload"
+                                                            className="hidden"
+                                                            accept="image/*"
+                                                            onChange={(e) => handleQrUpload(e, 'two')}
+                                                        />
+                                                        <Button
+                                                            type="button"
+                                                            variant="secondary"
+                                                            className="w-full"
+                                                            loading={qrTwoUploading}
+                                                            onClick={() => document.getElementById('qr-two-upload').click()}
+                                                        >
+                                                            <Upload className="w-4 h-4 mr-2" />
+                                                            Upload
+                                                        </Button>
+                                                    </div>
+                                                </div>
+
+                                                {settings.twoEventsQrCodeUrl && (
+                                                    <div className="mt-2 p-4 rounded-xl bg-[var(--color-bg-tertiary)] flex flex-col items-center">
+                                                        <img
+                                                            src={settings.twoEventsQrCodeUrl}
+                                                            alt="Two Events QR Preview"
+                                                            className="max-w-[150px] h-auto rounded-lg border border-[var(--glass-border)]"
+                                                        />
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            <div className="space-y-4">
                                                 <h3 className="font-semibold text-[var(--color-text-primary)]">All Events Combo QR</h3>
-                                                <p className="text-sm text-[var(--color-text-muted)]">Shown when a participant selects multiple events (Combo).</p>
+                                                <p className="text-sm text-[var(--color-text-muted)]">Shown when a participant selects multiple events (Combo - 3 or more).</p>
 
                                                 <div className="flex flex-col md:flex-row gap-4 items-start">
                                                     <div className="flex-1 w-full">
