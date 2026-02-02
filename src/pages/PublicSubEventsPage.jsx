@@ -59,12 +59,12 @@ const PublicSubEventsPage = () => {
     return (
         <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)]">
             {/* Banner Section */}
-            <div className="relative h-[300px] md:h-[400px] w-full overflow-hidden">
+            <div className={`relative w-full overflow-hidden ${!settings.publicSubEventsBannerUrl ? 'h-[300px] md:h-[400px]' : ''}`}>
                 {settings.publicSubEventsBannerUrl ? (
                     <img
                         src={settings.publicSubEventsBannerUrl}
                         alt="Event Banner"
-                        className="w-full h-full object-cover"
+                        className="w-full h-auto block"
                     />
                 ) : (
                     <div className="w-full h-full bg-gradient-to-br from-mindSaga-900 via-mindSaga-800 to-debate-900 flex items-center justify-center p-8 text-center">

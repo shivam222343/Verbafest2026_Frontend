@@ -14,23 +14,38 @@ const ParticipantsPage = () => {
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
-    const [attendanceFilter, setAttendanceFilter] = useState('all'); // 'all', 'present', 'absent'
+    const [attendanceFilter, setAttendanceFilter] = useState('all');
+    const [pagination, setPagination] = useState({
+        currentPage: 1,
+        totalPages: 1,
+        totalCount: 0,
+        limit: 50
+    });
 
     useEffect(() => {
-        fetchParticipants();
+        fetchParticipants(1);
     }, [statusFilter]);
 
     const navigate = useNavigate();
 
-    const fetchParticipants = async () => {
+    const fetchParticipants = async (page = pagination.currentPage) => {
         try {
             setLoading(true);
-            const params = {};
+            const params = {
+                page,
+                limit: pagination.limit
+            };
             if (statusFilter !== 'all') {
                 params.status = statusFilter;
             }
             const response = await axios.get('/admin/participants', { params });
             setParticipants(response.data.data);
+            setPagination(prev => ({
+                ...prev,
+                currentPage: response.data.currentPage,
+                totalPages: response.data.totalPages,
+                totalCount: response.data.count
+            }));
         } catch (error) {
             console.error('Error fetching participants:', error);
         } finally {
@@ -189,8 +204,9 @@ const ParticipantsPage = () => {
                             key={participant._id}
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: index * 0.05 }}
+                            transition={{ delay: index * 0.02 }}
                         >
+                            {/* ... Participant Card content (no changes needed inside map) ... */}
                             <Card className="p-6">
                                 <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                                     {/* Participant Info */}
@@ -271,6 +287,29 @@ const ParticipantsPage = () => {
                             </Card>
                         </motion.div>
                     ))}
+
+                    {/* Pagination Controls */}
+                    {pagination.totalPages > 1 && (
+                        <div className="flex items-center justify-center gap-4 mt-8 pb-8">
+                            <Button
+                                variant="outline"
+                                onClick={() => fetchParticipants(pagination.currentPage - 1)}
+                                disabled={pagination.currentPage === 1}
+                            >
+                                Previous
+                            </Button>
+                            <span className="text-sm font-medium text-[var(--color-text-secondary)]">
+                                Page {pagination.currentPage} of {pagination.totalPages}
+                            </span>
+                            <Button
+                                variant="outline"
+                                onClick={() => fetchParticipants(pagination.currentPage + 1)}
+                                disabled={pagination.currentPage === pagination.totalPages}
+                            >
+                                Next
+                            </Button>
+                        </div>
+                    )}
                 </div>
             )}
         </div>
