@@ -4,7 +4,7 @@ import {
     AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
     PieChart, Pie, Cell, BarChart, Bar, Legend
 } from 'recharts';
-import { MdTrendingUp, MdPeople, MdEvent, MdTimeline } from 'react-icons/md';
+import { MdTrendingUp, MdPeople, MdEvent, MdTimeline, MdEmojiEvents } from 'react-icons/md';
 import axios from '../lib/axios';
 import Card from '../components/ui/Card';
 import Loader from '../components/ui/Loader';
@@ -82,14 +82,15 @@ const AnalyticsPage = () => {
                         </div>
                     </div>
                 </Card>
-                <Card className="p-6 border-l-4 border-debate-400">
+                <Card className="p-6 border-l-4 bg-amber-500/5 border-amber-500">
                     <div className="flex items-center gap-4">
-                        <div className="p-3 rounded-xl bg-debate-400/10 text-debate-400">
-                            <MdTimeline className="w-6 h-6" />
+                        <div className="p-3 rounded-xl bg-amber-500/10 text-amber-500">
+                            <MdEmojiEvents className="w-6 h-6" />
                         </div>
                         <div>
-                            <p className="text-sm text-[var(--color-text-muted)]">Active Rounds</p>
-                            <h3 className="text-2xl font-bold text-[var(--color-text-primary)]">{data.activeRounds}</h3>
+                            <p className="text-sm text-[var(--color-text-muted)]">Full Access</p>
+                            <h3 className="text-2xl font-bold text-[var(--color-text-primary)]">{data.registeredForAllCount || 0}</h3>
+                            <p className="text-[10px] text-amber-600 font-bold uppercase mt-0.5">Registered for All</p>
                         </div>
                     </div>
                 </Card>
@@ -162,18 +163,40 @@ const AnalyticsPage = () => {
                     </div>
                 </Card>
 
-                {/* Sub-Event Popularity */}
-                <Card className="p-6 lg:col-span-2">
-                    <h2 className="text-xl font-bold text-[var(--color-text-primary)] mb-6">Sub-Event Popularity</h2>
-                    <div className="h-[350px] w-full">
+                {/* Participation Distribution */}
+                <Card className="p-6">
+                    <h2 className="text-xl font-bold text-[var(--color-text-primary)] mb-6">Participation Distribution</h2>
+                    <div className="h-[300px] w-full">
                         <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={data.subEventPop} margin={{ bottom: 20 }}>
+                            <BarChart data={data.participationStats}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="var(--glass-border)" vertical={false} />
+                                <XAxis dataKey="eventCount" stroke="var(--color-text-muted)" fontSize={12} />
+                                <YAxis stroke="var(--color-text-muted)" fontSize={12} />
+                                <Tooltip
+                                    contentStyle={{
+                                        backgroundColor: 'var(--color-bg-tertiary)',
+                                        border: '1px solid var(--glass-border)',
+                                        borderRadius: '8px'
+                                    }}
+                                />
+                                <Bar dataKey="participants" fill="#10b981" radius={[4, 4, 0, 0]} />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+                </Card>
+
+                {/* Sub-Event Popularity */}
+                <Card className="p-6 lg:col-span-1">
+                    <h2 className="text-xl font-bold text-[var(--color-text-primary)] mb-6">Sub-Event Popularity</h2>
+                    <div className="h-[300px] w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={data.subEventPop} margin={{ bottom: 50 }}>
                                 <CartesianGrid strokeDasharray="3 3" stroke="var(--glass-border)" vertical={false} />
                                 <XAxis
                                     dataKey="name"
                                     stroke="var(--color-text-muted)"
                                     fontSize={10}
-                                    angle={-20}
+                                    angle={-45}
                                     textAnchor="end"
                                     interval={0}
                                 />

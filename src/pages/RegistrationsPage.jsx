@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MdCheckCircle, MdCancel, MdRemoveRedEye, MdSearch, MdFilterList } from 'react-icons/md';
+import { MdCheckCircle, MdCancel, MdRemoveRedEye, MdSearch, MdFilterList, MdAdd } from 'react-icons/md';
 import { FiExternalLink } from 'react-icons/fi';
 import axios from '../lib/axios';
 import Card from '../components/ui/Card';
@@ -130,7 +130,15 @@ const RegistrationsPage = () => {
                             animate={{ opacity: 1, scale: 1 }}
                             transition={{ delay: index * 0.05 }}
                         >
-                            <Card className="p-0 overflow-hidden flex flex-col sm:flex-row h-full">
+                            <Card className={`p-0 overflow-hidden flex flex-col sm:flex-row h-full transition-all duration-300 ${p.isReRegistration ? 'border-2 border-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.2)]' : ''}`}>
+                                {p.isReRegistration && (
+                                    <div className="absolute top-0 right-0 z-20">
+                                        <div className="bg-amber-500 text-white text-[10px] font-black px-3 py-1 rounded-bl-xl shadow-lg border-b border-l border-amber-600 flex items-center gap-1 uppercase tracking-tighter">
+                                            <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
+                                            Additional Event Added
+                                        </div>
+                                    </div>
+                                )}
                                 {/* Payment Proof Preview */}
                                 <div
                                     className="sm:w-48 h-48 sm:h-auto relative group cursor-pointer bg-black/20"
@@ -179,6 +187,11 @@ const RegistrationsPage = () => {
                                                 {p.registeredSubEvents?.map(e => (
                                                     <span key={e._id} className="px-2 py-0.5 rounded bg-mindSaga-500/10 text-mindSaga-400 border border-mindSaga-500/20">
                                                         {e.name}
+                                                    </span>
+                                                ))}
+                                                {p.isReRegistration && p.pendingSubEvents?.map(e => (
+                                                    <span key={e._id || e} className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-600 border border-amber-500/30 flex items-center gap-1 font-bold">
+                                                        <MdAdd className="w-3 h-3" /> {typeof e === 'string' ? 'New Event' : e.name}
                                                     </span>
                                                 ))}
                                             </div>

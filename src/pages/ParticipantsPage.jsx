@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FiSearch, FiFilter, FiCheckCircle } from 'react-icons/fi';
-import { MdCheckCircle, MdCancel, MdPending, MdDelete } from 'react-icons/md';
+import { FiSearch, FiFilter, FiCheckCircle, FiDownload } from 'react-icons/fi';
+import { MdCheckCircle, MdCancel, MdPending, MdDelete, MdClose } from 'react-icons/md';
 import axios from '../lib/axios';
 import toast from 'react-hot-toast';
 import Card from '../components/ui/Card';
@@ -22,8 +22,16 @@ const ParticipantsPage = () => {
         limit: 50
     });
 
+    // Export State
+    const [showExportModal, setShowExportModal] = useState(false);
+    const [subEvents, setSubEvents] = useState([]);
+    const [selectedExportSubEvents, setSelectedExportSubEvents] = useState(['all']);
+    const [exportFormat, setExportFormat] = useState('csv');
+    const [isExporting, setIsExporting] = useState(false);
+
     useEffect(() => {
         fetchParticipants(1);
+        fetchSubEvents();
     }, [statusFilter]);
 
     const navigate = useNavigate();
@@ -50,6 +58,52 @@ const ParticipantsPage = () => {
             console.error('Error fetching participants:', error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const fetchSubEvents = async () => {
+        try {
+            const response = await axios.get('/admin/subevents');
+            setSubEvents(response.data.data);
+        } catch (error) {
+            console.error('Error fetching sub-events:', error);
+        }
+    };
+
+    const handleExport = async () => {
+        try {
+            setIsExporting(true);
+            const token = localStorage.getItem('token');
+            const subEventsParam = selectedExportSubEvents.includes('all') ? 'all' : selectedExportSubEvents.join(',');
+            const statusParam = statusFilter === 'all' ? '' : statusFilter;
+
+            const exportUrl = `${axios.defaults.baseURL}/admin/participants/export?format=${exportFormat}&subEvents=${subEventsParam}&status=${statusParam}`;
+
+            const response = await fetch(exportUrl, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (!response.ok) throw new Error('Export failed');
+
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `participants-export-${new Date().toISOString().split('T')[0]}.${exportFormat}`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+
+            toast.success('List exported successfully');
+            setShowExportModal(false);
+        } catch (error) {
+            console.error('Export error:', error);
+            toast.error('Failed to export participants');
+        } finally {
+            setIsExporting(false);
         }
     };
 
@@ -120,6 +174,16 @@ const ParticipantsPage = () => {
                 <p className="text-[var(--color-text-secondary)] mt-1">
                     Manage participant registrations and approvals
                 </p>
+            </div>
+            <div className="flex gap-2">
+                <Button
+                    variant="outline"
+                    onClick={() => setShowExportModal(true)}
+                    className="flex items-center gap-2"
+                >
+                    <FiDownload className="w-4 h-4" />
+                    Export List
+                </Button>
             </div>
 
             {/* Stats */}
@@ -310,6 +374,117 @@ const ParticipantsPage = () => {
                             </Button>
                         </div>
                     )}
+                </div>
+            )}
+
+            {/* Export Modal */}
+            {showExportModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="w-full max-w-lg"
+                    >
+                        <Card className="p-6 relative !bg-[var(--color-bg-primary)] shadow-2xl border-none">
+                            <button
+                                onClick={() => setShowExportModal(false)}
+                                className="absolute top-4 right-4 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
+                            >
+                                <MdClose className="w-6 h-6" />
+                            </button>
+
+                            <h2 className="text-2xl font-bold text-[var(--color-text-primary)] mb-2 flex items-center gap-2">
+                                <FiDownload className="w-6 h-6 text-mindSaga-500" />
+                                Export Participants
+                            </h2>
+                            <p className="text-[var(--color-text-secondary)] text-sm mb-6">
+                                Generate a detailed report of participants in your preferred format.
+                            </p>
+
+                            <div className="space-y-6">
+                                {/* Sub-Event Selection */}
+                                <div className="space-y-3">
+                                    <label className="text-sm font-semibold text-[var(--color-text-secondary)]">Select Sub-Events</label>
+                                    <div className="max-h-48 overflow-y-auto p-3 rounded-xl border border-[var(--glass-border)] bg-[var(--color-bg-tertiary)] space-y-2">
+                                        <label className="flex items-center gap-2 p-2 rounded-lg hover:bg-black/5 cursor-pointer transition-colors">
+                                            <input
+                                                type="checkbox"
+                                                checked={selectedExportSubEvents.includes('all')}
+                                                onChange={(e) => {
+                                                    if (e.target.checked) setSelectedExportSubEvents(['all']);
+                                                    else setSelectedExportSubEvents([]);
+                                                }}
+                                                className="w-4 h-4 rounded border-[var(--glass-border)] text-mindSaga-600 focus:ring-mindSaga-500"
+                                            />
+                                            <span className="text-sm font-medium text-[var(--color-text-primary)]">All Sub-Events</span>
+                                        </label>
+                                        <div className="h-px bg-[var(--glass-border)] my-1" />
+                                        {subEvents.map(event => (
+                                            <label key={event._id} className="flex items-center gap-2 p-2 rounded-lg hover:bg-black/5 cursor-pointer transition-colors">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={selectedExportSubEvents.includes(event._id)}
+                                                    onChange={(e) => {
+                                                        const newSelection = selectedExportSubEvents.filter(id => id !== 'all');
+                                                        if (e.target.checked) {
+                                                            setSelectedExportSubEvents([...newSelection, event._id]);
+                                                        } else {
+                                                            setSelectedExportSubEvents(newSelection.filter(id => id !== event._id));
+                                                        }
+                                                    }}
+                                                    className="w-4 h-4 rounded border-[var(--glass-border)] text-mindSaga-600 focus:ring-mindSaga-500"
+                                                />
+                                                <span className="text-sm text-[var(--color-text-primary)]">{event.name}</span>
+                                            </label>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Format Selection */}
+                                <div className="space-y-3">
+                                    <label className="text-sm font-semibold text-[var(--color-text-secondary)]">Export Format</label>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <button
+                                            onClick={() => setExportFormat('csv')}
+                                            className={`flex items-center justify-center gap-2 p-4 rounded-xl border-2 transition-all ${exportFormat === 'csv' ? 'border-mindSaga-500 bg-mindSaga-500/10 text-mindSaga-600' : 'border-[var(--glass-border)] bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)] hover:border-[var(--color-text-primary)]'}`}
+                                        >
+                                            <span className="font-bold">CSV / Excel</span>
+                                        </button>
+                                        <button
+                                            onClick={() => setExportFormat('html')}
+                                            className={`flex items-center justify-center gap-2 p-4 rounded-xl border-2 transition-all ${exportFormat === 'html' ? 'border-mindSaga-500 bg-mindSaga-500/10 text-mindSaga-600' : 'border-[var(--glass-border)] bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)] hover:border-[var(--color-text-primary)]'}`}
+                                        >
+                                            <span className="font-bold">HTML Webpage</span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div className="p-3 bg-mindSaga-500/5 rounded-lg border border-mindSaga-500/10">
+                                    <p className="text-[10px] text-mindSaga-400 font-bold uppercase tracking-wider">Filtered By Current Status</p>
+                                    <p className="text-xs text-[var(--color-text-secondary)]">Currently active filter: <span className="font-bold capitalize">{statusFilter}</span></p>
+                                </div>
+                            </div>
+
+                            <div className="mt-8 flex gap-4">
+                                <Button
+                                    variant="secondary"
+                                    className="flex-1 h-12 rounded-xl"
+                                    onClick={() => setShowExportModal(false)}
+                                >
+                                    Cancel
+                                </Button>
+                                <Button
+                                    variant="primary"
+                                    className="flex-1 h-12 rounded-xl shadow-lg"
+                                    loading={isExporting}
+                                    disabled={selectedExportSubEvents.length === 0}
+                                    onClick={handleExport}
+                                >
+                                    Start Export
+                                </Button>
+                            </div>
+                        </Card>
+                    </motion.div>
                 </div>
             )}
         </div>

@@ -2,9 +2,11 @@ import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
-    MdLogout, MdEvent, MdCheckCircle, MdPerson, MdLightMode, MdDarkMode,
-    MdInfo, MdTimer, MdLocationOn, MdRefresh, MdAnnouncement, MdNotifications
+    MdInfo, MdTimer, MdLocationOn, MdRefresh, MdAnnouncement, MdNotifications,
+    MdWhatsapp, MdPerson, MdLogout, MdDarkMode, MdLightMode, MdCheckCircle, MdEvent,
+    MdAccessTime
 } from 'react-icons/md';
+import { format, formatDistanceToNow } from 'date-fns';
 import { AlertCircle } from 'lucide-react';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
@@ -17,6 +19,7 @@ import Loader from '../components/ui/Loader';
 import BottomSheet from '../components/ui/BottomSheet';
 import useNotificationStore from '../store/notificationStore';
 import ReRegistrationForm from '../components/ReRegistrationForm';
+import AddMoreEventsForm from '../components/AddMoreEventsForm';
 
 const ParticipantDashboard = () => {
     const navigate = useNavigate();
@@ -339,36 +342,53 @@ const ParticipantDashboard = () => {
                         {/* All Registered Sub-Events */}
                         <div className="space-y-4">
                             <h3 className="text-xl font-bold text-[var(--color-text-primary)] flex items-center gap-2">
-                                <MdEvent className="text-mindSaga-500" /> Your Events
+                                <MdEvent className="text-mindSaga-500" /> Your Events & Communities
                             </h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {registeredEvents.map(event => (
-                                    <Card key={event._id} className="p-6 hover:shadow-xl transition-all group">
-                                        <div className="flex justify-between items-start mb-4">
+                                    <Card key={event._id} className="p-6 hover:shadow-xl transition-all group overflow-hidden relative">
+                                        <div className="flex justify-between items-start mb-4 relative z-10">
                                             <div className={`p-3 rounded-xl bg-${event.accentColor || 'mindSaga'}-500/10 text-${event.accentColor || 'mindSaga'}-500`}>
                                                 <MdEvent className="w-6 h-6" />
                                             </div>
-                                            <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${event.myStatus === 'winner' ? 'bg-status-available/20 text-status-available border border-status-available/30' :
-                                                event.myStatus === 'eliminated' ? 'bg-status-busy/20 text-status-busy border border-status-busy/30' :
-                                                    event.myStatus === 'active' || event.myStatus === 'started' ? 'bg-gd-500/20 text-gd-400 border border-gd-500/30' :
-                                                        event.myStatus === 'qualified' ? 'bg-status-available/20 text-status-available border border-status-available/30' :
-                                                            'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)] border border-[var(--glass-border)]'
-                                                }`}>
-                                                {event.myStatus === 'active' || event.myStatus === 'started' ? `Round ${event.myRoundNumber}` : event.myStatus.replace('_', ' ')}
-                                            </span>
+                                            <div className="flex flex-col items-end gap-2">
+                                                <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${event.myStatus === 'winner' ? 'bg-status-available/20 text-status-available border border-status-available/30' :
+                                                    event.myStatus === 'eliminated' ? 'bg-status-busy/20 text-status-busy border border-status-busy/30' :
+                                                        event.myStatus === 'active' || event.myStatus === 'started' ? 'bg-gd-500/20 text-gd-400 border border-gd-500/30' :
+                                                            event.myStatus === 'qualified' ? 'bg-status-available/20 text-status-available border border-status-available/30' :
+                                                                'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)] border border-[var(--glass-border)]'
+                                                    }`}>
+                                                    {event.myStatus === 'active' || event.myStatus === 'started' ? `Round ${event.myRoundNumber}` : event.myStatus.replace('_', ' ')}
+                                                </span>
+                                            </div>
                                         </div>
-                                        <h4 className="text-xl font-bold text-[var(--color-text-primary)] mb-2 group-hover:text-mindSaga-400 transition-colors">
+                                        <h4 className="text-xl font-bold text-[var(--color-text-primary)] mb-2 group-hover:text-mindSaga-400 transition-colors relative z-10">
                                             {event.name}
                                         </h4>
-                                        <p className="text-sm text-[var(--color-text-secondary)] line-clamp-2 mb-4">
+                                        <p className="text-sm text-[var(--color-text-secondary)] line-clamp-2 mb-4 relative z-10">
                                             {event.description}
                                         </p>
-                                        <div className="pt-4 border-t border-[var(--glass-border)] flex items-center justify-between text-xs font-bold text-[var(--color-text-muted)]">
+                                        <div className="pt-4 border-t border-[var(--glass-border)] flex items-center justify-between text-xs font-bold text-[var(--color-text-muted)] relative z-10">
                                             <span className="uppercase tracking-widest">{event.type} Event</span>
                                             <span className={`uppercase tracking-widest ${event.status === 'completed' ? 'text-status-available' : 'text-mindSaga-400'}`}>
                                                 {event.status === 'completed' ? 'Finished' : 'Upcoming'}
                                             </span>
                                         </div>
+
+                                        {event.whatsappGroupLink && (
+                                            <div className="mt-4 pt-4 border-t border-[var(--glass-border)] relative z-10">
+                                                <Button
+                                                    className="w-full flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#128C7E] text-white border-none shadow-lg shadow-green-500/20 py-2.5 transition-all active:scale-95"
+                                                    onClick={() => window.open(event.whatsappGroupLink, '_blank')}
+                                                >
+                                                    <MdWhatsapp className="w-5 h-5" />
+                                                    Join Event WhatsApp Group
+                                                </Button>
+                                            </div>
+                                        )}
+
+                                        {/* Abstract BG Decor */}
+                                        <div className={`absolute -right-8 -bottom-8 w-32 h-32 bg-${event.accentColor || 'mindSaga'}-500 opacity-[0.03] rounded-full group-hover:scale-125 transition-transform duration-700`} />
                                     </Card>
                                 ))}
 
@@ -377,12 +397,19 @@ const ParticipantDashboard = () => {
                                         <MdEvent className="w-12 h-12 text-[var(--color-text-muted)] mb-4" />
                                         <h3 className="text-lg font-bold text-[var(--color-text-primary)]">No Registered Events</h3>
                                         <p className="text-[var(--color-text-secondary)] max-w-sm mt-2">
-                                            You haven't registered for any sub-events yet. Head over to the registration portal to join the excitement!
+                                            You haven't registered for any sub-events yet. Look below to join some exciting events!
                                         </p>
-                                        <Button className="mt-6" onClick={() => navigate('/registration')}>Go to Registration</Button>
                                     </div>
                                 )}
                             </div>
+                        </div>
+
+                        {/* Add More Events Section */}
+                        <div className="pt-10 border-t border-[var(--glass-border)]">
+                            <AddMoreEventsForm
+                                participant={profile}
+                                onSuccess={fetchDashboardData}
+                            />
                         </div>
                     </>
                 )}
@@ -401,20 +428,33 @@ const ParticipantDashboard = () => {
                                 <span className="text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-widest">Recent Activity</span>
                             </div>
                             {notifications.map((notif) => (
-                                <Card key={notif.id} className="p-4 border-l-4 border-l-mindSaga-500 bg-mindSaga-500/5">
-                                    <div className="flex justify-between items-start mb-1">
-                                        <h4 className="font-bold text-[var(--color-text-primary)]">{notif.title}</h4>
-                                        <span className="text-[10px] text-[var(--color-text-muted)]">
-                                            {notif.timestamp ? new Date(notif.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Now'}
-                                        </span>
-                                    </div>
-                                    <p className="text-sm text-[var(--color-text-secondary)] mb-2">{notif.message}</p>
-                                    {notif.location && (
-                                        <div className="flex items-center gap-1.5 text-xs font-bold text-mindSaga-400">
-                                            <MdLocationOn className="w-4 h-4" />
-                                            Venue: {notif.location}
+                                <Card key={notif.id} className="p-4 border-l-4 border-l-mindSaga-500 bg-mindSaga-500/5 relative overflow-hidden group">
+                                    <div className="flex justify-between items-start mb-1 relative z-10">
+                                        <h4 className="font-bold text-[var(--color-text-primary)] group-hover:text-mindSaga-400 transition-colors">{notif.title}</h4>
+                                        <div className="flex flex-col items-end">
+                                            <span className="text-[10px] font-black text-mindSaga-500 uppercase tracking-tighter">
+                                                {notif.timestamp ? formatDistanceToNow(new Date(notif.timestamp), { addSuffix: true }) : 'Just now'}
+                                            </span>
+                                            <span className="text-[9px] text-[var(--color-text-muted)] font-medium">
+                                                {notif.timestamp ? format(new Date(notif.timestamp), 'h:mm a') : ''}
+                                            </span>
                                         </div>
-                                    )}
+                                    </div>
+                                    <p className="text-sm text-[var(--color-text-secondary)] mb-3 relative z-10 leading-relaxed">{notif.message}</p>
+                                    <div className="flex items-center justify-between relative z-10">
+                                        {notif.location ? (
+                                            <div className="flex items-center gap-1.5 text-[10px] font-bold text-mindSaga-400 bg-mindSaga-400/10 px-2 py-0.5 rounded-lg">
+                                                <MdLocationOn className="w-3.5 h-3.5" />
+                                                Venue: {notif.location}
+                                            </div>
+                                        ) : <div />}
+                                        <div className="flex items-center gap-1 text-[9px] text-[var(--color-text-muted)]">
+                                            <MdAccessTime className="w-3 h-3" />
+                                            Received
+                                        </div>
+                                    </div>
+                                    {/* Abstract decoration */}
+                                    <div className="absolute -right-2 -bottom-2 w-16 h-16 bg-mindSaga-500/5 rounded-full group-hover:scale-150 transition-transform duration-500" />
                                 </Card>
                             ))}
                         </>
