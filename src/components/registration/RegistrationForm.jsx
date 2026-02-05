@@ -593,7 +593,6 @@ const RegistrationForm = () => {
                                                 <div>
                                                     <div className="flex justify-between items-end mb-1">
                                                         <label className="block text-sm font-medium text-[var(--color-text-secondary)]">Sub Event Selection *</label>
-                                                        <span className="text-[10px] text-mindSaga-400 font-medium">Can participate in one or all events</span>
                                                     </div>
                                                     <div className="flex flex-col gap-2 p-3 bg-[var(--color-bg-tertiary)] rounded-xl border border-[var(--glass-border)]">
                                                         {subEvents.length > 0 ? subEvents.map(event => {

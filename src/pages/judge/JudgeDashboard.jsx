@@ -309,8 +309,13 @@ const JudgeDashboard = () => {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-xl overflow-hidden shadow-lg border border-[var(--glass-border)] bg-white p-1">
-                                <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" />
+                            <div className="flex items-center gap-3">
+                                <div className="w-12 h-12 rounded-xl overflow-hidden shadow-lg border border-[var(--glass-border)] bg-white p-1">
+                                    <img src="/Mavericks_Logo.png" alt="Mavericks Logo" className="w-full h-full object-contain" />
+                                </div>
+                                <div className="w-12 h-12 rounded-xl overflow-hidden shadow-lg border border-[var(--glass-border)] bg-white p-1">
+                                    <img src="/logo.png" alt="Verbafest Logo" className="w-full h-full object-contain" />
+                                </div>
                             </div>
                             <div>
                                 <h1 className="text-2xl font-bold text-[var(--color-text-primary)] font-display">

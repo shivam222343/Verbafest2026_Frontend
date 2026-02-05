@@ -108,7 +108,10 @@ const ParticipantDashboard = () => {
                         {/* Left Section - Logo */}
                         <div className="flex items-center gap-3">
                             <div className="w-12 h-12 rounded-xl overflow-hidden shadow-lg border border-[var(--glass-border)] bg-white p-1">
-                                <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" />
+                                <img src="/Mavericks_Logo.png" alt="Mavericks Logo" className="w-full h-full object-contain" />
+                            </div>
+                            <div className="w-12 h-12 rounded-xl overflow-hidden shadow-lg border border-[var(--glass-border)] bg-white p-1">
+                                <img src="/logo.png" alt="Verbafest Logo" className="w-full h-full object-contain" />
                             </div>
                             <div className="hidden sm:block">
                                 <h1 className="text-lg font-semibold text-[var(--color-text-primary)]">

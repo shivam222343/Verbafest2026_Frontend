@@ -7,7 +7,12 @@ import RegistrationForm from "../components/registration/RegistrationForm";
 import QueryForm from "../components/QueryForm";
 
 const RegistrationPage = () => {
-    const { theme } = useThemeStore();
+    const { theme, setTheme } = useThemeStore();
+
+    useEffect(() => {
+        // Set default to light when entering registration page
+        setTheme('light');
+    }, [setTheme]);
 
     useEffect(() => {
         document.documentElement.setAttribute('data-theme', theme);
@@ -21,7 +26,10 @@ const RegistrationPage = () => {
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <div className="w-12 h-12 rounded-xl overflow-hidden shadow-lg border border-[var(--glass-border)] bg-white p-1">
-                                <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" />
+                                <img src="/Mavericks_Logo.png" alt="Mavericks Logo" className="w-full h-full object-contain" />
+                            </div>
+                            <div className="w-12 h-12 rounded-xl overflow-hidden shadow-lg border border-[var(--glass-border)] bg-white p-1">
+                                <img src="/logo.png" alt="Verbafest Logo" className="w-full h-full object-contain" />
                             </div>
                         </div>
                         <div className="flex items-center gap-3">

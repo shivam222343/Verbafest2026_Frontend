@@ -139,7 +139,7 @@ const PublicSubEventsPage = () => {
                                             <MdEmojiEvents className="w-8 h-8" />
                                         </div>
                                         <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest bg-${event.accentColor || 'mindSaga'}-500/20 text-${event.accentColor || 'mindSaga'}-400`}>
-                                            {event.type}
+                                            Individual
                                         </span>
                                     </div>
 
