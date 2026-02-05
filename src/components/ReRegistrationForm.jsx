@@ -23,9 +23,10 @@ const ReRegistrationForm = ({ participant, onSuccess }) => {
 
     useEffect(() => {
         // Auto-populate selected events from participant's original registration
-        if (participant?.registeredSubEvents) {
-            const eventIds = participant.registeredSubEvents.map(e => e._id || e);
-            setSelectedEvents(eventIds);
+        if (participant) {
+            const registeredIds = participant.registeredSubEvents?.map(e => e._id || e) || [];
+            const pendingIds = participant.pendingSubEvents?.map(e => e._id || e) || [];
+            setSelectedEvents([...new Set([...registeredIds, ...pendingIds])]);
         }
         fetchSubEvents();
         fetchPaymentSettings();

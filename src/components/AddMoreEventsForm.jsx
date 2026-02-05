@@ -211,13 +211,27 @@ const AddMoreEventsForm = ({ participant, onSuccess }) => {
                                 <h4 className="text-lg font-bold text-[var(--color-text-primary)]">Payment Required</h4>
                                 <p className="text-sm text-[var(--color-text-secondary)]">Please pay ₹{total} to the UPI ID below to confirm your slots.</p>
                             </div>
-                            {paymentSettings && paymentSettings.singleEventQrCodeUrl && (
+                            {paymentSettings && (
                                 <div className="bg-white p-3 rounded-xl shadow-inner">
-                                    <img
-                                        src={paymentSettings.singleEventQrCodeUrl}
-                                        alt="Pay QR"
-                                        className="w-32 h-32 object-contain"
-                                    />
+                                    {(() => {
+                                        let qrCodeUrl = paymentSettings.singleEventQrCodeUrl || paymentSettings.allEventsQrCodeUrl;
+                                        if (selectedEvents.length === 2) {
+                                            qrCodeUrl = paymentSettings.twoEventsQrCodeUrl || paymentSettings.allEventsQrCodeUrl || paymentSettings.singleEventQrCodeUrl;
+                                        } else if (selectedEvents.length >= 3) {
+                                            qrCodeUrl = paymentSettings.allEventsQrCodeUrl || paymentSettings.singleEventQrCodeUrl;
+                                        }
+                                        return qrCodeUrl ? (
+                                            <img
+                                                src={qrCodeUrl}
+                                                alt="Pay QR"
+                                                className="w-32 h-32 object-contain"
+                                            />
+                                        ) : (
+                                            <div className="w-32 h-32 flex items-center justify-center border-2 border-dashed border-[var(--glass-border)] rounded-lg">
+                                                <Upload className="w-8 h-8 text-[var(--color-text-muted)]" />
+                                            </div>
+                                        );
+                                    })()}
                                 </div>
                             )}
                         </div>
