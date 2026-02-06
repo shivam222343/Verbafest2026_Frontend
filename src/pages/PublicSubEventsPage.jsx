@@ -105,7 +105,7 @@ const PublicSubEventsPage = () => {
                         <h2 className="text-3xl md:text-4xl font-bold mb-2">Sub-Events</h2>
                         <p className="text-[var(--color-text-secondary)]">Choose your challenge and prove your worth.</p>
                     </div>
-                    {settings.isRegistrationOpen && (
+                    {settings.isRegistrationOpen && !settings.pauseRegistrations && (
                         <Button
                             variant="primary"
                             size="lg"
@@ -125,9 +125,9 @@ const PublicSubEventsPage = () => {
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: idx * 0.1 }}
                         >
-                            <Card className={`h-full group hover:border-mindSaga-500/50 transition-smooth overflow-hidden flex flex-col relative ${(event.maxParticipants > 0 && event.approvedParticipants >= event.maxParticipants) ? 'opacity-75 grayscale-[0.5]' : ''
+                            <Card className={`h-full group hover:border-mindSaga-500/50 transition-smooth overflow-hidden flex flex-col relative ${(event.maxParticipants > 0 && event.approvedParticipants >= event.maxParticipants) || settings?.pauseRegistrations ? 'opacity-75 grayscale-[0.5]' : ''
                                 }`}>
-                                {event.maxParticipants > 0 && event.approvedParticipants >= event.maxParticipants && (
+                                {((event.maxParticipants > 0 && event.approvedParticipants >= event.maxParticipants) || settings?.pauseRegistrations) && (
                                     <div className="absolute top-4 right-4 z-10 bg-status-busy text-white text-[10px] font-black px-2 py-1 rounded shadow-lg animate-pulse uppercase tracking-widest">
                                         Full
                                     </div>
@@ -143,7 +143,7 @@ const PublicSubEventsPage = () => {
                                         </span>
                                     </div>
 
-                                    <h3 className={`text-xl font-bold mb-3 transition-colors ${(event.maxParticipants > 0 && event.approvedParticipants >= event.maxParticipants)
+                                    <h3 className={`text-xl font-bold mb-3 transition-colors ${(event.maxParticipants > 0 && event.approvedParticipants >= event.maxParticipants) || settings?.pauseRegistrations
                                         ? 'text-status-busy'
                                         : 'text-[var(--color-text-primary)] group-hover:text-mindSaga-400'
                                         }`}>
@@ -167,15 +167,16 @@ const PublicSubEventsPage = () => {
                                     <button
                                         onClick={() => {
                                             if (event.maxParticipants > 0 && event.approvedParticipants >= event.maxParticipants) return;
+                                            if (settings?.pauseRegistrations) return;
                                             navigate('/register');
                                         }}
-                                        disabled={event.maxParticipants > 0 && event.approvedParticipants >= event.maxParticipants}
-                                        className={`w-full py-4 transition-smooth font-bold text-sm uppercase tracking-widest flex items-center justify-center gap-2 border-t border-[var(--glass-border)] ${event.maxParticipants > 0 && event.approvedParticipants >= event.maxParticipants
+                                        disabled={(event.maxParticipants > 0 && event.approvedParticipants >= event.maxParticipants) || settings?.pauseRegistrations}
+                                        className={`w-full py-4 transition-smooth font-bold text-sm uppercase tracking-widest flex items-center justify-center gap-2 border-t border-[var(--glass-border)] ${(event.maxParticipants > 0 && event.approvedParticipants >= event.maxParticipants) || settings?.pauseRegistrations
                                             ? 'bg-status-busy/10 text-status-busy cursor-not-allowed'
                                             : 'bg-[var(--color-bg-tertiary)] hover:bg-mindSaga-600 hover:text-white'
                                             }`}
                                     >
-                                        {event.maxParticipants > 0 && event.approvedParticipants >= event.maxParticipants
+                                        {(event.maxParticipants > 0 && event.approvedParticipants >= event.maxParticipants) || settings?.pauseRegistrations
                                             ? 'Registrations Full'
                                             : <>Register for this <MdArrowForward /></>}
                                     </button>

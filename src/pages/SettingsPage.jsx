@@ -25,7 +25,8 @@ const SettingsPage = () => {
         availableStreams: ['Computer Science and Engineering'],
         availableColleges: ["Kit's college of enginnering, Kolhapur"],
         showSubEventsOnPublicPage: false,
-        publicSubEventsBannerUrl: ''
+        publicSubEventsBannerUrl: '',
+        pauseRegistrations: false
     });
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -48,12 +49,12 @@ const SettingsPage = () => {
             const response = await axios.get('/admin/settings');
             if (response.data.data) {
                 const data = response.data.data;
-                setSettings({
-                    ...settings,
+                setSettings(prev => ({
+                    ...prev,
                     ...data,
                     eventDate: data.eventDate ? new Date(data.eventDate).toISOString().split('T')[0] : '',
                     registrationDeadline: data.registrationDeadline ? new Date(data.registrationDeadline).toISOString().split('T')[0] : ''
-                });
+                }));
             }
         } catch (error) {
             console.error('Failed to fetch settings:', error);
@@ -92,11 +93,11 @@ const SettingsPage = () => {
             });
 
             if (type === 'single') {
-                setSettings({ ...settings, singleEventQrCodeUrl: response.data.url });
+                setSettings(prev => ({ ...prev, singleEventQrCodeUrl: response.data.url }));
             } else if (type === 'two') {
-                setSettings({ ...settings, twoEventsQrCodeUrl: response.data.url });
+                setSettings(prev => ({ ...prev, twoEventsQrCodeUrl: response.data.url }));
             } else {
-                setSettings({ ...settings, allEventsQrCodeUrl: response.data.url });
+                setSettings(prev => ({ ...prev, allEventsQrCodeUrl: response.data.url }));
             }
             toast.success('QR Code uploaded! Press save to apply.');
         } catch (error) {
@@ -122,7 +123,7 @@ const SettingsPage = () => {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
 
-            setSettings({ ...settings, publicSubEventsBannerUrl: response.data.url });
+            setSettings(prev => ({ ...prev, publicSubEventsBannerUrl: response.data.url }));
             toast.success('Banner uploaded! Press save to apply.');
         } catch (error) {
             toast.error('Failed to upload banner');
@@ -202,7 +203,7 @@ const SettingsPage = () => {
                                             label="Contact Email"
                                             type="email"
                                             value={settings.contactEmail}
-                                            onChange={e => setSettings({ ...settings, contactEmail: e.target.value })}
+                                            onChange={e => setSettings(prev => ({ ...prev, contactEmail: e.target.value }))}
                                             placeholder="support@event.com"
                                         />
 
@@ -214,7 +215,7 @@ const SettingsPage = () => {
                                                 </div>
                                                 <button
                                                     type="button"
-                                                    onClick={() => setSettings({ ...settings, isRegistrationOpen: !settings.isRegistrationOpen })}
+                                                    onClick={() => setSettings(prev => ({ ...prev, isRegistrationOpen: !prev.isRegistrationOpen }))}
                                                     className={`w-12 h-6 rounded-full transition-smooth relative ${settings.isRegistrationOpen ? 'bg-status-available' : 'bg-[var(--color-text-muted)]'}`}
                                                 >
                                                     <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-smooth ${settings.isRegistrationOpen ? 'right-1' : 'left-1'}`} />
@@ -228,7 +229,7 @@ const SettingsPage = () => {
                                                 </div>
                                                 <button
                                                     type="button"
-                                                    onClick={() => setSettings({ ...settings, maintenanceMode: !settings.maintenanceMode })}
+                                                    onClick={() => setSettings(prev => ({ ...prev, maintenanceMode: !prev.maintenanceMode }))}
                                                     className={`w-12 h-6 rounded-full transition-smooth relative ${settings.maintenanceMode ? 'bg-status-busy' : 'bg-[var(--color-text-muted)]'}`}
                                                 >
                                                     <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-smooth ${settings.maintenanceMode ? 'right-1' : 'left-1'}`} />
@@ -243,368 +244,381 @@ const SettingsPage = () => {
                                 <div className="space-y-6">
                                     <h2 className="text-xl font-bold text-[var(--color-text-primary)] border-b border-[var(--glass-border)] pb-4">Public Registration Page</h2>
 
-                                    <div className="space-y-6">
-                                        {/* URL Card */}
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <div className="p-4 rounded-xl bg-mindSaga-500/10 border border-mindSaga-500/20">
-                                                <p className="text-sm text-mindSaga-300 mb-1">Public Registration Link</p>
-                                                <div className="flex items-center gap-2">
-                                                    <code className="flex-1 bg-black/30 p-2 rounded text-sm text-[var(--color-text-primary)] truncate">
-                                                        {registrationUrl}
-                                                    </code>
-                                                    <Button
-                                                        type="button"
-                                                        variant="secondary"
-                                                        className="py-1 px-3 text-xs"
-                                                        onClick={() => {
-                                                            navigator.clipboard.writeText(registrationUrl);
-                                                            toast.success('Link copied!');
-                                                        }}
-                                                    >
-                                                        Copy
-                                                    </Button>
-                                                </div>
+                                    {/* Pause All Registrations Toggle */}
+                                    <div className="flex items-center justify-between p-4 rounded-xl bg-status-busy/10 border border-status-busy/20 shadow-sm">
+                                        <div>
+                                            <p className="font-semibold text-status-busy">Pause All Registrations</p>
+                                            <p className="text-sm text-[var(--color-text-muted)]">Mark all sub-events as full and stop new signups</p>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => setSettings(prev => ({ ...prev, pauseRegistrations: !prev.pauseRegistrations }))}
+                                            className={`w-12 h-6 rounded-full transition-smooth relative ${settings.pauseRegistrations ? 'bg-status-busy' : 'bg-[var(--color-text-muted)]'}`}
+                                        >
+                                            <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-smooth ${settings.pauseRegistrations ? 'right-1' : 'left-1'}`} />
+                                        </button>
+                                    </div>
+
+                                    {/* URL Card */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="p-4 rounded-xl bg-mindSaga-500/10 border border-mindSaga-500/20">
+                                            <p className="text-sm text-mindSaga-300 mb-1">Public Registration Link</p>
+                                            <div className="flex items-center gap-2">
+                                                <code className="flex-1 bg-black/30 p-2 rounded text-sm text-[var(--color-text-primary)] truncate">
+                                                    {registrationUrl}
+                                                </code>
+                                                <Button
+                                                    type="button"
+                                                    variant="secondary"
+                                                    className="py-1 px-3 text-xs"
+                                                    onClick={() => {
+                                                        navigator.clipboard.writeText(registrationUrl);
+                                                        toast.success('Link copied!');
+                                                    }}
+                                                >
+                                                    Copy
+                                                </Button>
                                             </div>
-                                            <div className="p-4 rounded-xl bg-debate-500/10 border border-debate-500/20">
-                                                <p className="text-sm text-debate-300 mb-1">Public Sub-Events Link</p>
-                                                <div className="flex items-center gap-2">
-                                                    <code className="flex-1 bg-black/30 p-2 rounded text-sm text-[var(--color-text-primary)] truncate">
-                                                        {publicSubEventsUrl}
-                                                    </code>
+                                        </div>
+                                        <div className="p-4 rounded-xl bg-debate-500/10 border border-debate-500/20">
+                                            <p className="text-sm text-debate-300 mb-1">Public Sub-Events Link</p>
+                                            <div className="flex items-center gap-2">
+                                                <code className="flex-1 bg-black/30 p-2 rounded text-sm text-[var(--color-text-primary)] truncate">
+                                                    {publicSubEventsUrl}
+                                                </code>
+                                                <Button
+                                                    type="button"
+                                                    variant="secondary"
+                                                    className="py-1 px-3 text-xs"
+                                                    onClick={() => {
+                                                        navigator.clipboard.writeText(publicSubEventsUrl);
+                                                        toast.success('Link copied!');
+                                                    }}
+                                                >
+                                                    Copy
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Public Sub-Events Options */}
+                                    <div className="p-4 rounded-xl bg-[var(--color-bg-tertiary)] space-y-4">
+                                        <div className="flex items-center justify-between">
+                                            <div>
+                                                <p className="font-semibold text-[var(--color-text-primary)]">Public Sub-Events Page</p>
+                                                <p className="text-sm text-[var(--color-text-muted)]">Show all sub-events on a dedicated public page</p>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => setSettings({ ...settings, showSubEventsOnPublicPage: !settings.showSubEventsOnPublicPage })}
+                                                className={`w-12 h-6 rounded-full transition-smooth relative ${settings.showSubEventsOnPublicPage ? 'bg-mindSaga-600' : 'bg-[var(--color-text-muted)]'}`}
+                                            >
+                                                <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-smooth ${settings.showSubEventsOnPublicPage ? 'right-1' : 'left-1'}`} />
+                                            </button>
+                                        </div>
+
+                                        {settings.showSubEventsOnPublicPage && (
+                                            <motion.div
+                                                initial={{ opacity: 0, height: 0 }}
+                                                animate={{ opacity: 1, height: 'auto' }}
+                                                className="pt-4 border-t border-[var(--glass-border)] space-y-4"
+                                            >
+                                                <div className="flex flex-col md:flex-row gap-4 items-start">
+                                                    <div className="flex-1 w-full">
+                                                        <Input
+                                                            label="Sub-Events Banner URL"
+                                                            value={settings.publicSubEventsBannerUrl}
+                                                            onChange={e => setSettings({ ...settings, publicSubEventsBannerUrl: e.target.value })}
+                                                            placeholder="https://example.com/banner.png"
+                                                        />
+                                                    </div>
+                                                    <div className="w-full md:w-auto pt-7">
+                                                        <input
+                                                            type="file"
+                                                            id="banner-upload"
+                                                            className="hidden"
+                                                            accept="image/*"
+                                                            onChange={handleBannerUpload}
+                                                        />
+                                                        <Button
+                                                            type="button"
+                                                            variant="secondary"
+                                                            className="w-full"
+                                                            loading={bannerUploading}
+                                                            onClick={() => document.getElementById('banner-upload').click()}
+                                                        >
+                                                            <Upload className="w-4 h-4 mr-2" />
+                                                            Upload
+                                                        </Button>
+                                                    </div>
+                                                </div>
+
+                                                {settings.publicSubEventsBannerUrl && (
+                                                    <div className="p-4 rounded-xl bg-black/20 flex flex-col items-center">
+                                                        <img
+                                                            src={settings.publicSubEventsBannerUrl}
+                                                            alt="Banner Preview"
+                                                            className="w-full h-auto max-h-[150px] object-cover rounded-lg border border-[var(--glass-border)]"
+                                                        />
+                                                    </div>
+                                                )}
+                                            </motion.div>
+                                        )}
+                                    </div>
+
+                                    {/* Dropdown Options Management */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                        <div className="space-y-4">
+                                            <div className="flex items-center justify-between">
+                                                <label className="block text-sm font-bold text-[var(--color-text-primary)]">Registration Prices</label>
+                                            </div>
+                                            <Input
+                                                label="All Events Combo Price (₹)"
+                                                type="number"
+                                                value={settings.comboPrice}
+                                                onChange={e => setSettings({ ...settings, comboPrice: parseInt(e.target.value) || 0 })}
+                                                placeholder="150"
+                                            />
+                                        </div>
+
+                                        <div className="space-y-4">
+                                            <label className="block text-sm font-bold text-[var(--color-text-primary)]">Available Colleges</label>
+                                            <div className="flex flex-wrap gap-2 p-3 rounded-xl bg-[var(--color-bg-tertiary)] border border-[var(--glass-border)] min-h-[100px] items-start content-start">
+                                                {settings.availableColleges?.map((college, idx) => (
+                                                    <span key={idx} className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-mindSaga-500/10 text-mindSaga-400 text-xs font-semibold border border-mindSaga-500/20 group animate-in fade-in zoom-in duration-200">
+                                                        {college}
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setSettings({ ...settings, availableColleges: settings.availableColleges.filter((_, i) => i !== idx) })}
+                                                            className="hover:text-status-busy transition-colors"
+                                                        >
+                                                            <MdAdd className="w-3.5 h-3.5 rotate-45" />
+                                                        </button>
+                                                    </span>
+                                                ))}
+                                                <div className="flex gap-2 w-full mt-2">
+                                                    <input
+                                                        type="text"
+                                                        placeholder="Add college..."
+                                                        id="new-college"
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === 'Enter') {
+                                                                e.preventDefault();
+                                                                const val = e.target.value.trim();
+                                                                if (val && !settings.availableColleges?.includes(val)) {
+                                                                    setSettings({ ...settings, availableColleges: [...(settings.availableColleges || []), val] });
+                                                                    e.target.value = '';
+                                                                }
+                                                            }
+                                                        }}
+                                                        className="flex-1 bg-transparent border-none text-sm outline-none text-[var(--color-text-primary)] px-1"
+                                                    />
                                                     <Button
                                                         type="button"
-                                                        variant="secondary"
-                                                        className="py-1 px-3 text-xs"
+                                                        variant="primary"
+                                                        className="h-8 px-3 text-xs"
                                                         onClick={() => {
-                                                            navigator.clipboard.writeText(publicSubEventsUrl);
-                                                            toast.success('Link copied!');
+                                                            const input = document.getElementById('new-college');
+                                                            const val = input.value.trim();
+                                                            if (val && !settings.availableColleges?.includes(val)) {
+                                                                setSettings({ ...settings, availableColleges: [...(settings.availableColleges || []), val] });
+                                                                input.value = '';
+                                                            }
                                                         }}
                                                     >
-                                                        Copy
+                                                        Add
                                                     </Button>
                                                 </div>
                                             </div>
                                         </div>
 
-                                        {/* Public Sub-Events Options */}
-                                        <div className="p-4 rounded-xl bg-[var(--color-bg-tertiary)] space-y-4">
-                                            <div className="flex items-center justify-between">
-                                                <div>
-                                                    <p className="font-semibold text-[var(--color-text-primary)]">Public Sub-Events Page</p>
-                                                    <p className="text-sm text-[var(--color-text-muted)]">Show all sub-events on a dedicated public page</p>
+                                        <div className="space-y-4">
+                                            <label className="block text-sm font-bold text-[var(--color-text-primary)]">Available Streams</label>
+                                            <div className="flex flex-wrap gap-2 p-3 rounded-xl bg-[var(--color-bg-tertiary)] border border-[var(--glass-border)] min-h-[100px] items-start content-start">
+                                                {settings.availableStreams?.map((stream, idx) => (
+                                                    <span key={idx} className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-gd-500/10 text-gd-400 text-xs font-semibold border border-gd-500/20 group animate-in fade-in zoom-in duration-200">
+                                                        {stream}
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setSettings({ ...settings, availableStreams: settings.availableStreams.filter((_, i) => i !== idx) })}
+                                                            className="hover:text-status-busy transition-colors"
+                                                        >
+                                                            <MdAdd className="w-3.5 h-3.5 rotate-45" />
+                                                        </button>
+                                                    </span>
+                                                ))}
+                                                <div className="flex gap-2 w-full mt-2">
+                                                    <input
+                                                        type="text"
+                                                        placeholder="Add stream..."
+                                                        id="new-stream"
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === 'Enter') {
+                                                                e.preventDefault();
+                                                                const val = e.target.value.trim();
+                                                                if (val && !settings.availableStreams?.includes(val)) {
+                                                                    setSettings({ ...settings, availableStreams: [...(settings.availableStreams || []), val] });
+                                                                    e.target.value = '';
+                                                                }
+                                                            }
+                                                        }}
+                                                        className="flex-1 bg-transparent border-none text-sm outline-none text-[var(--color-text-primary)] px-1"
+                                                    />
+                                                    <Button
+                                                        type="button"
+                                                        variant="primary"
+                                                        className="h-8 px-3 text-xs"
+                                                        onClick={() => {
+                                                            const input = document.getElementById('new-stream');
+                                                            const val = input.value.trim();
+                                                            if (val && !settings.availableStreams?.includes(val)) {
+                                                                setSettings({ ...settings, availableStreams: [...(settings.availableStreams || []), val] });
+                                                                input.value = '';
+                                                            }
+                                                        }}
+                                                    >
+                                                        Add
+                                                    </Button>
                                                 </div>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setSettings({ ...settings, showSubEventsOnPublicPage: !settings.showSubEventsOnPublicPage })}
-                                                    className={`w-12 h-6 rounded-full transition-smooth relative ${settings.showSubEventsOnPublicPage ? 'bg-mindSaga-600' : 'bg-[var(--color-text-muted)]'}`}
-                                                >
-                                                    <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-smooth ${settings.showSubEventsOnPublicPage ? 'right-1' : 'left-1'}`} />
-                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* QR Codes URLs */}
+                                    <div className="space-y-8">
+                                        <div className="space-y-4">
+                                            <h3 className="font-semibold text-[var(--color-text-primary)]">Single Event Payment QR</h3>
+                                            <p className="text-sm text-[var(--color-text-muted)]">Shown when a participant selects only one event.</p>
+
+                                            <div className="flex flex-col md:flex-row gap-4 items-start">
+                                                <div className="flex-1 w-full">
+                                                    <Input
+                                                        label="Single QR URL"
+                                                        value={settings.singleEventQrCodeUrl}
+                                                        onChange={e => setSettings({ ...settings, singleEventQrCodeUrl: e.target.value })}
+                                                        placeholder="https://example.com/single-qr.png"
+                                                    />
+                                                </div>
+                                                <div className="w-full md:w-auto pt-7">
+                                                    <input
+                                                        type="file"
+                                                        id="qr-single-upload"
+                                                        className="hidden"
+                                                        accept="image/*"
+                                                        onChange={(e) => handleQrUpload(e, 'single')}
+                                                    />
+                                                    <Button
+                                                        type="button"
+                                                        variant="secondary"
+                                                        className="w-full"
+                                                        loading={qrSingleUploading}
+                                                        onClick={() => document.getElementById('qr-single-upload').click()}
+                                                    >
+                                                        <Upload className="w-4 h-4 mr-2" />
+                                                        Upload
+                                                    </Button>
+                                                </div>
                                             </div>
 
-                                            {settings.showSubEventsOnPublicPage && (
-                                                <motion.div
-                                                    initial={{ opacity: 0, height: 0 }}
-                                                    animate={{ opacity: 1, height: 'auto' }}
-                                                    className="pt-4 border-t border-[var(--glass-border)] space-y-4"
-                                                >
-                                                    <div className="flex flex-col md:flex-row gap-4 items-start">
-                                                        <div className="flex-1 w-full">
-                                                            <Input
-                                                                label="Sub-Events Banner URL"
-                                                                value={settings.publicSubEventsBannerUrl}
-                                                                onChange={e => setSettings({ ...settings, publicSubEventsBannerUrl: e.target.value })}
-                                                                placeholder="https://example.com/banner.png"
-                                                            />
-                                                        </div>
-                                                        <div className="w-full md:w-auto pt-7">
-                                                            <input
-                                                                type="file"
-                                                                id="banner-upload"
-                                                                className="hidden"
-                                                                accept="image/*"
-                                                                onChange={handleBannerUpload}
-                                                            />
-                                                            <Button
-                                                                type="button"
-                                                                variant="secondary"
-                                                                className="w-full"
-                                                                loading={bannerUploading}
-                                                                onClick={() => document.getElementById('banner-upload').click()}
-                                                            >
-                                                                <Upload className="w-4 h-4 mr-2" />
-                                                                Upload
-                                                            </Button>
-                                                        </div>
-                                                    </div>
-
-                                                    {settings.publicSubEventsBannerUrl && (
-                                                        <div className="p-4 rounded-xl bg-black/20 flex flex-col items-center">
-                                                            <img
-                                                                src={settings.publicSubEventsBannerUrl}
-                                                                alt="Banner Preview"
-                                                                className="w-full h-auto max-h-[150px] object-cover rounded-lg border border-[var(--glass-border)]"
-                                                            />
-                                                        </div>
-                                                    )}
-                                                </motion.div>
+                                            {settings.singleEventQrCodeUrl && (
+                                                <div className="mt-2 p-4 rounded-xl bg-[var(--color-bg-tertiary)] flex flex-col items-center">
+                                                    <img
+                                                        src={settings.singleEventQrCodeUrl}
+                                                        alt="Single QR Preview"
+                                                        className="max-w-[150px] h-auto rounded-lg border border-[var(--glass-border)]"
+                                                    />
+                                                </div>
                                             )}
                                         </div>
 
-                                        {/* Dropdown Options Management */}
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                            <div className="space-y-4">
-                                                <div className="flex items-center justify-between">
-                                                    <label className="block text-sm font-bold text-[var(--color-text-primary)]">Registration Prices</label>
-                                                </div>
-                                                <Input
-                                                    label="All Events Combo Price (₹)"
-                                                    type="number"
-                                                    value={settings.comboPrice}
-                                                    onChange={e => setSettings({ ...settings, comboPrice: parseInt(e.target.value) || 0 })}
-                                                    placeholder="150"
-                                                />
-                                            </div>
+                                        <div className="space-y-4">
+                                            <h3 className="font-semibold text-[var(--color-text-primary)]">Two Events Payment QR</h3>
+                                            <p className="text-sm text-[var(--color-text-muted)]">Shown when a participant selects exactly two events.</p>
 
-                                            <div className="space-y-4">
-                                                <label className="block text-sm font-bold text-[var(--color-text-primary)]">Available Colleges</label>
-                                                <div className="flex flex-wrap gap-2 p-3 rounded-xl bg-[var(--color-bg-tertiary)] border border-[var(--glass-border)] min-h-[100px] items-start content-start">
-                                                    {settings.availableColleges?.map((college, idx) => (
-                                                        <span key={idx} className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-mindSaga-500/10 text-mindSaga-400 text-xs font-semibold border border-mindSaga-500/20 group animate-in fade-in zoom-in duration-200">
-                                                            {college}
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => setSettings({ ...settings, availableColleges: settings.availableColleges.filter((_, i) => i !== idx) })}
-                                                                className="hover:text-status-busy transition-colors"
-                                                            >
-                                                                <MdAdd className="w-3.5 h-3.5 rotate-45" />
-                                                            </button>
-                                                        </span>
-                                                    ))}
-                                                    <div className="flex gap-2 w-full mt-2">
-                                                        <input
-                                                            type="text"
-                                                            placeholder="Add college..."
-                                                            id="new-college"
-                                                            onKeyDown={(e) => {
-                                                                if (e.key === 'Enter') {
-                                                                    e.preventDefault();
-                                                                    const val = e.target.value.trim();
-                                                                    if (val && !settings.availableColleges?.includes(val)) {
-                                                                        setSettings({ ...settings, availableColleges: [...(settings.availableColleges || []), val] });
-                                                                        e.target.value = '';
-                                                                    }
-                                                                }
-                                                            }}
-                                                            className="flex-1 bg-transparent border-none text-sm outline-none text-[var(--color-text-primary)] px-1"
-                                                        />
-                                                        <Button
-                                                            type="button"
-                                                            variant="primary"
-                                                            className="h-8 px-3 text-xs"
-                                                            onClick={() => {
-                                                                const input = document.getElementById('new-college');
-                                                                const val = input.value.trim();
-                                                                if (val && !settings.availableColleges?.includes(val)) {
-                                                                    setSettings({ ...settings, availableColleges: [...(settings.availableColleges || []), val] });
-                                                                    input.value = '';
-                                                                }
-                                                            }}
-                                                        >
-                                                            Add
-                                                        </Button>
-                                                    </div>
+                                            <div className="flex flex-col md:flex-row gap-4 items-start">
+                                                <div className="flex-1 w-full">
+                                                    <Input
+                                                        label="Two Events QR URL"
+                                                        value={settings.twoEventsQrCodeUrl}
+                                                        onChange={e => setSettings({ ...settings, twoEventsQrCodeUrl: e.target.value })}
+                                                        placeholder="https://example.com/two-events-qr.png"
+                                                    />
+                                                </div>
+                                                <div className="w-full md:w-auto pt-7">
+                                                    <input
+                                                        type="file"
+                                                        id="qr-two-upload"
+                                                        className="hidden"
+                                                        accept="image/*"
+                                                        onChange={(e) => handleQrUpload(e, 'two')}
+                                                    />
+                                                    <Button
+                                                        type="button"
+                                                        variant="secondary"
+                                                        className="w-full"
+                                                        loading={qrTwoUploading}
+                                                        onClick={() => document.getElementById('qr-two-upload').click()}
+                                                    >
+                                                        <Upload className="w-4 h-4 mr-2" />
+                                                        Upload
+                                                    </Button>
                                                 </div>
                                             </div>
 
-                                            <div className="space-y-4">
-                                                <label className="block text-sm font-bold text-[var(--color-text-primary)]">Available Streams</label>
-                                                <div className="flex flex-wrap gap-2 p-3 rounded-xl bg-[var(--color-bg-tertiary)] border border-[var(--glass-border)] min-h-[100px] items-start content-start">
-                                                    {settings.availableStreams?.map((stream, idx) => (
-                                                        <span key={idx} className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-gd-500/10 text-gd-400 text-xs font-semibold border border-gd-500/20 group animate-in fade-in zoom-in duration-200">
-                                                            {stream}
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => setSettings({ ...settings, availableStreams: settings.availableStreams.filter((_, i) => i !== idx) })}
-                                                                className="hover:text-status-busy transition-colors"
-                                                            >
-                                                                <MdAdd className="w-3.5 h-3.5 rotate-45" />
-                                                            </button>
-                                                        </span>
-                                                    ))}
-                                                    <div className="flex gap-2 w-full mt-2">
-                                                        <input
-                                                            type="text"
-                                                            placeholder="Add stream..."
-                                                            id="new-stream"
-                                                            onKeyDown={(e) => {
-                                                                if (e.key === 'Enter') {
-                                                                    e.preventDefault();
-                                                                    const val = e.target.value.trim();
-                                                                    if (val && !settings.availableStreams?.includes(val)) {
-                                                                        setSettings({ ...settings, availableStreams: [...(settings.availableStreams || []), val] });
-                                                                        e.target.value = '';
-                                                                    }
-                                                                }
-                                                            }}
-                                                            className="flex-1 bg-transparent border-none text-sm outline-none text-[var(--color-text-primary)] px-1"
-                                                        />
-                                                        <Button
-                                                            type="button"
-                                                            variant="primary"
-                                                            className="h-8 px-3 text-xs"
-                                                            onClick={() => {
-                                                                const input = document.getElementById('new-stream');
-                                                                const val = input.value.trim();
-                                                                if (val && !settings.availableStreams?.includes(val)) {
-                                                                    setSettings({ ...settings, availableStreams: [...(settings.availableStreams || []), val] });
-                                                                    input.value = '';
-                                                                }
-                                                            }}
-                                                        >
-                                                            Add
-                                                        </Button>
-                                                    </div>
+                                            {settings.twoEventsQrCodeUrl && (
+                                                <div className="mt-2 p-4 rounded-xl bg-[var(--color-bg-tertiary)] flex flex-col items-center">
+                                                    <img
+                                                        src={settings.twoEventsQrCodeUrl}
+                                                        alt="Two Events QR Preview"
+                                                        className="max-w-[150px] h-auto rounded-lg border border-[var(--glass-border)]"
+                                                    />
                                                 </div>
-                                            </div>
+                                            )}
                                         </div>
 
-                                        {/* QR Codes URLs */}
-                                        <div className="space-y-8">
-                                            <div className="space-y-4">
-                                                <h3 className="font-semibold text-[var(--color-text-primary)]">Single Event Payment QR</h3>
-                                                <p className="text-sm text-[var(--color-text-muted)]">Shown when a participant selects only one event.</p>
+                                        <div className="space-y-4">
+                                            <h3 className="font-semibold text-[var(--color-text-primary)]">All Events Combo QR</h3>
+                                            <p className="text-sm text-[var(--color-text-muted)]">Shown when a participant selects multiple events (Combo - 3 or more).</p>
 
-                                                <div className="flex flex-col md:flex-row gap-4 items-start">
-                                                    <div className="flex-1 w-full">
-                                                        <Input
-                                                            label="Single QR URL"
-                                                            value={settings.singleEventQrCodeUrl}
-                                                            onChange={e => setSettings({ ...settings, singleEventQrCodeUrl: e.target.value })}
-                                                            placeholder="https://example.com/single-qr.png"
-                                                        />
-                                                    </div>
-                                                    <div className="w-full md:w-auto pt-7">
-                                                        <input
-                                                            type="file"
-                                                            id="qr-single-upload"
-                                                            className="hidden"
-                                                            accept="image/*"
-                                                            onChange={(e) => handleQrUpload(e, 'single')}
-                                                        />
-                                                        <Button
-                                                            type="button"
-                                                            variant="secondary"
-                                                            className="w-full"
-                                                            loading={qrSingleUploading}
-                                                            onClick={() => document.getElementById('qr-single-upload').click()}
-                                                        >
-                                                            <Upload className="w-4 h-4 mr-2" />
-                                                            Upload
-                                                        </Button>
-                                                    </div>
+                                            <div className="flex flex-col md:flex-row gap-4 items-start">
+                                                <div className="flex-1 w-full">
+                                                    <Input
+                                                        label="Combo QR URL"
+                                                        value={settings.allEventsQrCodeUrl}
+                                                        onChange={e => setSettings({ ...settings, allEventsQrCodeUrl: e.target.value })}
+                                                        placeholder="https://example.com/combo-qr.png"
+                                                    />
                                                 </div>
-
-                                                {settings.singleEventQrCodeUrl && (
-                                                    <div className="mt-2 p-4 rounded-xl bg-[var(--color-bg-tertiary)] flex flex-col items-center">
-                                                        <img
-                                                            src={settings.singleEventQrCodeUrl}
-                                                            alt="Single QR Preview"
-                                                            className="max-w-[150px] h-auto rounded-lg border border-[var(--glass-border)]"
-                                                        />
-                                                    </div>
-                                                )}
+                                                <div className="w-full md:w-auto pt-7">
+                                                    <input
+                                                        type="file"
+                                                        id="qr-all-upload"
+                                                        className="hidden"
+                                                        accept="image/*"
+                                                        onChange={(e) => handleQrUpload(e, 'all')}
+                                                    />
+                                                    <Button
+                                                        type="button"
+                                                        variant="secondary"
+                                                        className="w-full"
+                                                        loading={qrAllUploading}
+                                                        onClick={() => document.getElementById('qr-all-upload').click()}
+                                                    >
+                                                        <Upload className="w-4 h-4 mr-2" />
+                                                        Upload
+                                                    </Button>
+                                                </div>
                                             </div>
 
-                                            <div className="space-y-4">
-                                                <h3 className="font-semibold text-[var(--color-text-primary)]">Two Events Payment QR</h3>
-                                                <p className="text-sm text-[var(--color-text-muted)]">Shown when a participant selects exactly two events.</p>
-
-                                                <div className="flex flex-col md:flex-row gap-4 items-start">
-                                                    <div className="flex-1 w-full">
-                                                        <Input
-                                                            label="Two Events QR URL"
-                                                            value={settings.twoEventsQrCodeUrl}
-                                                            onChange={e => setSettings({ ...settings, twoEventsQrCodeUrl: e.target.value })}
-                                                            placeholder="https://example.com/two-events-qr.png"
-                                                        />
-                                                    </div>
-                                                    <div className="w-full md:w-auto pt-7">
-                                                        <input
-                                                            type="file"
-                                                            id="qr-two-upload"
-                                                            className="hidden"
-                                                            accept="image/*"
-                                                            onChange={(e) => handleQrUpload(e, 'two')}
-                                                        />
-                                                        <Button
-                                                            type="button"
-                                                            variant="secondary"
-                                                            className="w-full"
-                                                            loading={qrTwoUploading}
-                                                            onClick={() => document.getElementById('qr-two-upload').click()}
-                                                        >
-                                                            <Upload className="w-4 h-4 mr-2" />
-                                                            Upload
-                                                        </Button>
-                                                    </div>
+                                            {settings.allEventsQrCodeUrl && (
+                                                <div className="mt-2 p-4 rounded-xl bg-[var(--color-bg-tertiary)] flex flex-col items-center">
+                                                    <img
+                                                        src={settings.allEventsQrCodeUrl}
+                                                        alt="Combo QR Preview"
+                                                        className="max-w-[150px] h-auto rounded-lg border border-[var(--glass-border)]"
+                                                    />
                                                 </div>
-
-                                                {settings.twoEventsQrCodeUrl && (
-                                                    <div className="mt-2 p-4 rounded-xl bg-[var(--color-bg-tertiary)] flex flex-col items-center">
-                                                        <img
-                                                            src={settings.twoEventsQrCodeUrl}
-                                                            alt="Two Events QR Preview"
-                                                            className="max-w-[150px] h-auto rounded-lg border border-[var(--glass-border)]"
-                                                        />
-                                                    </div>
-                                                )}
-                                            </div>
-
-                                            <div className="space-y-4">
-                                                <h3 className="font-semibold text-[var(--color-text-primary)]">All Events Combo QR</h3>
-                                                <p className="text-sm text-[var(--color-text-muted)]">Shown when a participant selects multiple events (Combo - 3 or more).</p>
-
-                                                <div className="flex flex-col md:flex-row gap-4 items-start">
-                                                    <div className="flex-1 w-full">
-                                                        <Input
-                                                            label="Combo QR URL"
-                                                            value={settings.allEventsQrCodeUrl}
-                                                            onChange={e => setSettings({ ...settings, allEventsQrCodeUrl: e.target.value })}
-                                                            placeholder="https://example.com/combo-qr.png"
-                                                        />
-                                                    </div>
-                                                    <div className="w-full md:w-auto pt-7">
-                                                        <input
-                                                            type="file"
-                                                            id="qr-all-upload"
-                                                            className="hidden"
-                                                            accept="image/*"
-                                                            onChange={(e) => handleQrUpload(e, 'all')}
-                                                        />
-                                                        <Button
-                                                            type="button"
-                                                            variant="secondary"
-                                                            className="w-full"
-                                                            loading={qrAllUploading}
-                                                            onClick={() => document.getElementById('qr-all-upload').click()}
-                                                        >
-                                                            <Upload className="w-4 h-4 mr-2" />
-                                                            Upload
-                                                        </Button>
-                                                    </div>
-                                                </div>
-
-                                                {settings.allEventsQrCodeUrl && (
-                                                    <div className="mt-2 p-4 rounded-xl bg-[var(--color-bg-tertiary)] flex flex-col items-center">
-                                                        <img
-                                                            src={settings.allEventsQrCodeUrl}
-                                                            alt="Combo QR Preview"
-                                                            className="max-w-[150px] h-auto rounded-lg border border-[var(--glass-border)]"
-                                                        />
-                                                    </div>
-                                                )}
-                                            </div>
+                                            )}
                                         </div>
                                     </div>
                                 </div>

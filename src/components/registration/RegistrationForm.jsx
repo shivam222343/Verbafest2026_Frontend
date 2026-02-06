@@ -250,13 +250,17 @@ const RegistrationForm = () => {
         }
     };
 
-    if (settings && settings.isRegistrationOpen === false) {
+    if (settings && (settings.isRegistrationOpen === false || settings.pauseRegistrations === true)) {
         return (
             <div className="max-w-2xl mx-auto py-12">
                 <Card className="text-center p-12">
                     <AlertCircle className="w-20 h-20 text-status-busy mx-auto mb-6" />
                     <h2 className="text-3xl font-bold text-[var(--color-text-primary)] mb-4">Registration Closed</h2>
-                    <p className="text-[var(--color-text-secondary)] mb-6">We are sorry, but registrations for {settings.eventName} are currently closed.</p>
+                    <p className="text-[var(--color-text-secondary)] mb-6">
+                        {settings.pauseRegistrations
+                            ? "Registrations are currently full or temporarily paused by the administrator."
+                            : `We are sorry, but registrations for ${settings.eventName} are currently closed.`}
+                    </p>
                     <p className="text-sm text-[var(--color-text-muted)]">Please contact {settings.contactEmail} for more information.</p>
                 </Card>
             </div>
@@ -433,6 +437,7 @@ const RegistrationForm = () => {
                             <p className="text-[var(--color-text-secondary)] mt-2">Please fill in your details carefully</p>
                         </div>
 
+
                         <AnimatePresence mode="wait">
                             {currentStep === 1 ? (
                                 <motion.div
@@ -596,7 +601,7 @@ const RegistrationForm = () => {
                                                     </div>
                                                     <div className="flex flex-col gap-2 p-3 bg-[var(--color-bg-tertiary)] rounded-xl border border-[var(--glass-border)]">
                                                         {subEvents.length > 0 ? subEvents.map(event => {
-                                                            const isFull = event.maxParticipants > 0 && event.approvedParticipants >= event.maxParticipants;
+                                                            const isFull = (event.maxParticipants > 0 && event.approvedParticipants >= event.maxParticipants) || settings?.pauseRegistrations;
                                                             return (
                                                                 <label
                                                                     key={event._id}
@@ -612,9 +617,6 @@ const RegistrationForm = () => {
                                                                             if (isSelected) {
                                                                                 setSelectedEvents(selectedEvents.filter(id => id !== event._id));
                                                                             } else {
-                                                                                // Allow selecting individually up to the total number of events
-                                                                                // If selecting the 3rd event, we could automatically select all if desired, 
-                                                                                // but let's allow manual selection of specifically 3 for the discount.
                                                                                 setSelectedEvents([...selectedEvents, event._id]);
                                                                             }
                                                                         }}
@@ -638,16 +640,20 @@ const RegistrationForm = () => {
                                                         <div className="pt-2 mt-2 border-t border-[var(--glass-border)] flex items-center justify-between">
                                                             <button
                                                                 type="button"
+                                                                disabled={settings?.pauseRegistrations}
                                                                 onClick={() => {
+                                                                    if (settings?.pauseRegistrations) return;
                                                                     const availableEvents = subEvents.filter(e => !(e.maxParticipants > 0 && e.approvedParticipants >= e.maxParticipants));
                                                                     if (selectedEvents.length === availableEvents.length) setSelectedEvents([]);
                                                                     else setSelectedEvents(availableEvents.map(e => e._id));
                                                                 }}
-                                                                className="text-xs font-bold text-mindSaga-500 hover:underline"
+                                                                className={`text-xs font-bold ${settings?.pauseRegistrations ? 'text-[var(--color-text-muted)] cursor-not-allowed' : 'text-mindSaga-500 hover:underline'}`}
                                                             >
-                                                                {selectedEvents.length > 0 && selectedEvents.length === subEvents.filter(e => !(e.maxParticipants > 0 && e.approvedParticipants >= e.maxParticipants)).length
-                                                                    ? 'Deselect All'
-                                                                    : 'Select Available All Events'}
+                                                                {settings?.pauseRegistrations
+                                                                    ? 'Registrations Closed'
+                                                                    : (selectedEvents.length > 0 && selectedEvents.length === subEvents.filter(e => !(e.maxParticipants > 0 && e.approvedParticipants >= e.maxParticipants)).length
+                                                                        ? 'Deselect All'
+                                                                        : 'Select Available All Events')}
                                                             </button>
                                                             <div className="text-right">
                                                                 {calculation.discount > 0 && (
@@ -675,8 +681,9 @@ const RegistrationForm = () => {
                                             variant="primary"
                                             className="w-full h-14 text-lg font-bold shadow-lg shadow-mindSaga-500/20 active:scale-[0.98] transition-all"
                                             onClick={nextStep}
+                                            disabled={settings?.pauseRegistrations}
                                         >
-                                            Next: Payment Information →
+                                            {settings?.pauseRegistrations ? 'Registrations Closed' : 'Next: Payment Information →'}
                                         </Button>
                                     </div>
                                 </motion.div>
