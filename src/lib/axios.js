@@ -1,7 +1,7 @@
 import axios from 'axios';
 import useAuthStore from '../store/authStore';
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://verbafest-dummy.onrender.com/api';
+const API_URL = import.meta.env.VITE_API_URL || 'https://verbafest2026.onrender.com/api';
 
 const axiosInstance = axios.create({
     baseURL: API_URL,
@@ -39,7 +39,6 @@ axiosInstance.interceptors.response.use(
         // Only handle 401 errors that are actual authentication failures
         // Don't logout for missing endpoints (404) or other errors
         if (error.response?.status === 401 && error.response?.data?.message?.toLowerCase().includes('token')) {
-            console.warn('Authentication failed: Invalid or expired token. Logging out...', error.response?.data?.message);
             // Unauthorized - clear auth and redirect to appropriate login
             const authStorage = localStorage.getItem('auth-storage');
             let userRole = null;
@@ -57,9 +56,13 @@ axiosInstance.interceptors.response.use(
             useAuthStore.getState().logout();
 
             // Redirect to appropriate login page
-            const redirectUrl = userRole === 'admin' ? '/admin/login' : (userRole === 'participant' ? '/participant/login' : '/admin/login');
-            console.log(`Redirecting to: ${redirectUrl}`);
-            window.location.href = redirectUrl;
+            if (userRole === 'admin') {
+                window.location.href = '/admin/login';
+            } else if (userRole === 'participant') {
+                window.location.href = '/participant/login';
+            } else {
+                window.location.href = '/admin/login'; // Default
+            }
         }
         return Promise.reject(error);
     }
