@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     MdArrowBack, MdAdd, MdSettings, MdGroups, MdPerson,
     MdCheckCircle, MdPlayArrow, MdStop, MdLocationOn, MdClose,
-    MdFilterList, MdSearch, MdPeople, MdRefresh, MdTimer, MdAnalytics, MdChevronLeft, MdChevronRight, MdCheck, MdDelete
+    MdFilterList, MdSearch, MdPeople, MdRefresh, MdTimer, MdAnalytics, MdChevronLeft, MdChevronRight, MdCheck, MdDelete, MdFileDownload
 } from 'react-icons/md';
 import Loader from '../../components/ui/Loader';
 import toast from 'react-hot-toast';
@@ -53,7 +53,7 @@ const EventControlRoom = () => {
 
     useEffect(() => {
         fetchEventDetails();
-        if (activeTab === 'participants') {
+        if (activeTab === 'participants' || activeTab === 'shortlist') {
             fetchEventParticipants();
         }
     }, [id, activeTab, selectedRoundId]);
@@ -278,6 +278,59 @@ const EventControlRoom = () => {
         }
     };
 
+    const handleMakeAllAvailable = async () => {
+        if (!window.confirm('Are you sure you want to make all approved participants for this event available?')) return;
+        try {
+            await axios.put(`/admin/participants/subevent/${id}/make-all-available`);
+            toast.success('All participants are now available');
+            fetchEventParticipants();
+        } catch (error) {
+            toast.error('Failed to update participants');
+        }
+    };
+
+    const handleManualNominate = async () => {
+        if (!selectedRoundId || selectedRoundId === 'all') {
+            toast.error('Please select a specific round first');
+            return;
+        }
+        if (selectedParticipants.length === 0) {
+            toast.error('Please select participants to nominate');
+            return;
+        }
+
+        try {
+            await axios.post(`/admin/rounds/${selectedRoundId}/manual-nominate`, {
+                participantIds: selectedParticipants
+            });
+            toast.success('Selected participants nominated to next round!');
+            setSelectedParticipants([]);
+            fetchEventParticipants();
+        } catch (error) {
+            toast.error(error.response?.data?.message || 'Failed to nominate participants');
+        }
+    };
+
+    const handleExportWinners = async (roundId, format) => {
+        try {
+            const response = await axios.get(`/admin/rounds/${roundId}/export-winners`, {
+                params: { format },
+                responseType: 'blob'
+            });
+
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            const extension = format;
+            link.setAttribute('download', `nominated_participants_${Date.now()}.${extension}`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+        } catch (error) {
+            toast.error('Failed to export winners');
+        }
+    };
+
     if (loading || !subEvent) {
         return <Loader message="Establishing event control link..." />;
     }
@@ -315,7 +368,10 @@ const EventControlRoom = () => {
 
             {/* Tabs */}
             <div className="flex gap-4 border-b border-[var(--glass-border)] pb-2 overflow-x-auto">
-                {['rounds', 'groups', 'panels', 'evaluations', 'participants', 'settings'].map(tab => (
+                {(subEvent.type === 'individual'
+                    ? ['rounds', 'shortlist', 'participants', 'settings']
+                    : ['rounds', 'groups', 'panels', 'evaluations', 'participants', 'settings']
+                ).map(tab => (
                     <button
                         key={tab}
                         onClick={() => setActiveTab(tab)}
@@ -329,7 +385,7 @@ const EventControlRoom = () => {
 
             {/* Round Selector for Management Tabs */}
             {
-                ['groups', 'panels', 'evaluations'].includes(activeTab) && rounds.length > 0 && (
+                (['groups', 'panels', 'evaluations', 'shortlist'].includes(activeTab)) && rounds.length > 0 && (
                     <div className="flex items-center gap-4 bg-[var(--color-bg-tertiary)] p-3 rounded-xl border border-[var(--glass-border)]">
                         <span className="text-sm font-semibold text-[var(--color-text-muted)]">Managing Round:</span>
                         <div className="flex gap-2">
@@ -414,6 +470,34 @@ const EventControlRoom = () => {
                                                     <MdStop className="w-5 h-5" /> End
                                                 </Button>
                                             )}
+                                            {round.winners?.length > 0 && (
+                                                <div className="flex gap-1">
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={() => handleExportWinners(round._id, 'csv')}
+                                                        title="Export Winners CSV"
+                                                    >
+                                                        <MdFileDownload /> CSV
+                                                    </Button>
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={() => handleExportWinners(round._id, 'html')}
+                                                        title="Export Winners HTML"
+                                                    >
+                                                        <MdFileDownload /> HTML
+                                                    </Button>
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={() => handleExportWinners(round._id, 'pdf')}
+                                                        title="Export Winners PDF"
+                                                    >
+                                                        <MdFileDownload /> PDF
+                                                    </Button>
+                                                </div>
+                                            )}
                                             <Button variant="outline" size="sm" onClick={() => setEditingRound(round)}>
                                                 <MdSettings />
                                             </Button>
@@ -461,6 +545,130 @@ const EventControlRoom = () => {
                         exit={{ opacity: 0, y: -10 }}
                     >
                         <EvaluationOverview roundId={selectedRoundId} subEventId={id} />
+                    </motion.div>
+                )}
+
+                {/* Shortlist Tab (For Individual Events) */}
+                {activeTab === 'shortlist' && (
+                    <motion.div
+                        key="shortlist"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="space-y-4"
+                    >
+                        {!selectedRoundId || selectedRoundId === 'all' ? (
+                            <Card className="p-12 text-center border-dashed border-2 border-[var(--glass-border)]">
+                                <p className="text-[var(--color-text-muted)]">Please select a round above to manage shortlist.</p>
+                            </Card>
+                        ) : (
+                            <div className="space-y-4">
+                                <div className="flex justify-between items-center bg-[var(--color-bg-secondary)] p-4 rounded-xl border border-[var(--glass-border)]">
+                                    <div>
+                                        <h2 className="text-xl font-bold text-[var(--color-text-primary)]">Nominate to Next Round</h2>
+                                        <p className="text-sm text-[var(--color-text-secondary)]">Manually select students to promote to the next stage.</p>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <Button
+                                            variant="outline"
+                                            onClick={() => handleExportWinners(selectedRoundId, 'csv')}
+                                            title="Export Nominated CSV"
+                                        >
+                                            <MdFileDownload /> CSV
+                                        </Button>
+                                        <Button
+                                            variant="outline"
+                                            onClick={() => handleExportWinners(selectedRoundId, 'html')}
+                                            title="Export Nominated HTML"
+                                        >
+                                            <MdFileDownload /> HTML
+                                        </Button>
+                                        <Button
+                                            variant="outline"
+                                            onClick={() => handleExportWinners(selectedRoundId, 'pdf')}
+                                            title="Export Nominated PDF"
+                                        >
+                                            <MdFileDownload /> PDF
+                                        </Button>
+                                        <Button
+                                            variant="primary"
+                                            disabled={selectedParticipants.length === 0}
+                                            onClick={handleManualNominate}
+                                        >
+                                            Nominate {selectedParticipants.length} Participants
+                                        </Button>
+                                    </div>
+                                </div>
+
+                                <Card className="overflow-hidden">
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full text-left">
+                                            <thead>
+                                                <tr className="bg-[var(--color-bg-tertiary)] border-b border-[var(--glass-border)]">
+                                                    <th className="px-6 py-4 w-10">
+                                                        <input
+                                                            type="checkbox"
+                                                            className="rounded bg-[var(--input-bg)] border-[var(--input-border)] text-mindSaga-500"
+                                                            onChange={(e) => {
+                                                                if (e.target.checked) {
+                                                                    setSelectedParticipants(eventParticipants.map(p => p._id));
+                                                                } else {
+                                                                    setSelectedParticipants([]);
+                                                                }
+                                                            }}
+                                                            checked={selectedParticipants.length === eventParticipants.length && eventParticipants.length > 0}
+                                                        />
+                                                    </th>
+                                                    <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-[var(--color-text-muted)]">Participant</th>
+                                                    <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-[var(--color-text-muted)]">Status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-[var(--glass-border)]">
+                                                {eventParticipants.map(participant => (
+                                                    <tr key={participant._id} className="hover:bg-white/5 transition-colors">
+                                                        <td className="px-6 py-4">
+                                                            <input
+                                                                type="checkbox"
+                                                                className="rounded bg-[var(--input-bg)] border-[var(--input-border)] text-mindSaga-500"
+                                                                checked={selectedParticipants.includes(participant._id)}
+                                                                onChange={(e) => {
+                                                                    if (e.target.checked) {
+                                                                        setSelectedParticipants([...selectedParticipants, participant._id]);
+                                                                    } else {
+                                                                        setSelectedParticipants(selectedParticipants.filter(id => id !== participant._id));
+                                                                    }
+                                                                }}
+                                                            />
+                                                        </td>
+                                                        <td className="px-6 py-4">
+                                                            <div>
+                                                                <p className="font-semibold text-[var(--color-text-primary)]">{participant.fullName}</p>
+                                                                <p className="text-xs text-[var(--color-text-muted)]">{participant.prn}</p>
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-6 py-4">
+                                                            <span className={`px-2 py-1 rounded text-[10px] items-center gap-1 font-bold uppercase ${participant.currentStatus === 'qualified' ? 'bg-status-available/20 text-status-available' :
+                                                                participant.currentStatus === 'rejected' ? 'bg-status-busy/20 text-status-busy' :
+                                                                    'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)]'
+                                                                }`}>
+                                                                {participant.currentStatus}
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                                {eventParticipants.length === 0 && (
+                                                    <tr>
+                                                        <td colSpan="3" className="px-6 py-10 text-center text-[var(--color-text-muted)] italic">
+                                                            No participants in this round yet. Go to Rounds to manage shortlist.
+                                                        </td>
+                                                    </tr>
+                                                )}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </Card>
+                            </div>
+                        )}
                     </motion.div>
                 )}
 
@@ -517,6 +725,9 @@ const EventControlRoom = () => {
                                 </div>
                                 <Button variant="outline" size="sm" onClick={fetchEventParticipants}>
                                     <MdRefresh className="w-4 h-4" />
+                                </Button>
+                                <Button variant="danger" size="sm" onClick={handleMakeAllAvailable}>
+                                    Make All Available
                                 </Button>
                             </div>
                         </div>

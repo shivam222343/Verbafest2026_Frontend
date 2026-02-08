@@ -287,7 +287,7 @@ const GroupManagement = ({ roundId, subEventId }) => {
 
         try {
             const token = localStorage.getItem('token');
-            const url = `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/admin/groups/export/${format}?groupIds=${selectedGroupIds.join(',')}`;
+            const url = `${import.meta.env.VITE_API_URL || 'https://verbafest-dummy.onrender.com/api'}/admin/groups/export/${format}?groupIds=${selectedGroupIds.join(',')}`;
 
             if (format === 'html') {
                 const response = await axios.get(`/admin/groups/export/html?groupIds=${selectedGroupIds.join(',')}`);

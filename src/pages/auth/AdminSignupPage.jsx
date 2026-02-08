@@ -53,7 +53,7 @@ const AdminSignupPage = () => {
             setAuth(user, token, 'admin');
             navigate('/admin/complete-profile');
         } catch (err) {
-            setError(err.response?.data?.message || 'Failed to sign up with Google');
+            setError(err.response?.data?.message || 'Sign up failed. Please check your connection or CORS settings.');
         } finally {
             setLoading(false);
         }
@@ -82,7 +82,7 @@ const AdminSignupPage = () => {
             setAuth(user, token, 'admin');
             navigate('/admin/complete-profile');
         } catch (err) {
-            setError(err.response?.data?.message || 'Failed to create account');
+            setError(err.response?.data?.message || 'Sign up failed. Please check your connection or CORS settings.');
         } finally {
             setLoading(false);
         }

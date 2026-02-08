@@ -64,7 +64,7 @@ const AdminLoginPage = () => {
             }
         } catch (err) {
             console.error('Google sign in error:', err);
-            toast.error(err.response?.data?.message || 'Failed to sign in with Google');
+            toast.error(err.response?.data?.message || 'Sign in failed. Please check your connection or CORS settings.');
         } finally {
             setLoading(false);
         }
@@ -91,7 +91,7 @@ const AdminLoginPage = () => {
             }
         } catch (err) {
             console.error('Login error:', err);
-            toast.error(err.response?.data?.message || 'Invalid credentials');
+            toast.error(err.response?.data?.message || 'Sign in failed. Please check your connection or CORS settings.');
         } finally {
             setLoading(false);
         }

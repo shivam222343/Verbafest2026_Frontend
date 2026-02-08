@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     MdCheckCircle, MdPending, MdStar, MdGroup, MdPerson,
-    MdThumbUp, MdDownload, MdRefresh, MdChevronRight, MdFilterList, MdSearch, MdInfo, MdClose
+    MdThumbUp, MdDownload, MdRefresh, MdChevronRight, MdFilterList, MdSearch, MdInfo, MdClose, MdFileDownload
 } from 'react-icons/md';
 import axios from '../../lib/axios';
 import toast from 'react-hot-toast';
@@ -158,6 +158,26 @@ const EvaluationOverview = ({ roundId, subEventId }) => {
             toast.error(error.response?.data?.message || 'Failed to promote students');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleExportWinners = async (format) => {
+        try {
+            const response = await axios.get(`/admin/rounds/${roundId}/export-winners`, {
+                params: { format },
+                responseType: 'blob'
+            });
+
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            const extension = format;
+            link.setAttribute('download', `nominated_participants_${Date.now()}.${extension}`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+        } catch (error) {
+            toast.error('Failed to export winners');
         }
     };
 
@@ -399,6 +419,27 @@ const EvaluationOverview = ({ roundId, subEventId }) => {
                         </table>
                     </div>
                     <div className="p-4 bg-[var(--color-bg-tertiary)] flex justify-end gap-3 border-t border-[var(--glass-border)]">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleExportWinners('csv')}
+                        >
+                            <MdFileDownload className="mr-2" /> CSV
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleExportWinners('html')}
+                        >
+                            <MdFileDownload className="mr-2" /> HTML
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleExportWinners('pdf')}
+                        >
+                            <MdFileDownload className="mr-2" /> PDF
+                        </Button>
                         <Button
                             variant="primary"
                             size="sm"
